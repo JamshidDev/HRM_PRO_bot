@@ -1,15 +1,13 @@
 import { Composer, MemorySessionStorage, session } from "grammy"
 import { I18n} from "@grammyjs/i18n"
 import {chatMembers} from "@grammyjs/chat-members"
-import path from "path"
-import { fileURLToPath } from "url"
 import {conversations, createConversation} from "@grammyjs/conversations"
 import {registerConversations} from "../conversations/index.js"
 import {authService} from "../service/service/index.js"
 import {setUserId} from "../service/index.js"
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+//
+// const __filename = fileURLToPath(import.meta.url)
+// const __dirname = path.dirname(__filename)
 
 const adapter = new MemorySessionStorage()
 const bot = new Composer()
@@ -17,7 +15,7 @@ const bot = new Composer()
 const i18n = new I18n({
     defaultLocale: "uz",
     useSession: true,
-    directory:path.join(__dirname, "../locale"),
+    directory:'locale',
 })
 
 bot.use(session({
