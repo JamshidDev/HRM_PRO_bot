@@ -12,7 +12,7 @@
   "description": "",
   "dependencies": {
     "@grammyjs/chat-members": "^1.2.0",
-    "@grammyjs/conversations": "^2.1.0",
+    "@grammyjs/conversations": "^1.1.2",
     "@grammyjs/i18n": "^1.1.2",
     "@grammyjs/parse-mode": "^2.2.0",
     "cors": "^2.8.5",

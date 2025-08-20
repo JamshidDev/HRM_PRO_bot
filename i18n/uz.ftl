@@ -1,1 +1,0 @@
-hi_everyone = Salom 
