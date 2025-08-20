@@ -16,7 +16,7 @@ const TOKEN = process.env.BOT_TOKEN
 const bot = new Bot(TOKEN)
 
 
-// bot.use(configComposer)
+bot.use(configComposer)
 bot.use(clientComposer)
 
 
