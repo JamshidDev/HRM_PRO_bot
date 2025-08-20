@@ -43,4 +43,6 @@ bot.catch((err) => {
     ctx.reply("❌ Botda xato bo'ldi").catch(() => {})
 });
 
-bot.start()
+bot.start({
+    drop_pending_updates: true
+})
