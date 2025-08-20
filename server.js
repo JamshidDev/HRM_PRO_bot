@@ -18,11 +18,14 @@ const bot = new Bot(TOKEN)
 // app.use(express.json())
 // app.use(cors())
 
-bot.use(configComposer)
-bot.use(clientComposer)
+// bot.use(configComposer)
+// bot.use(clientComposer)
 
 
 
+bot.command('start', async (ctx) => {
+    await ctx.reply('Hello!')
+})
 
 
 
