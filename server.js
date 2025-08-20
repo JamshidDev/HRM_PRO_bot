@@ -14,12 +14,10 @@ const TOKEN = process.env.BOT_TOKEN
 
 
 const bot = new Bot(TOKEN)
-// const app = express()
-// app.use(express.json())
-// app.use(cors())
+
 
 // bot.use(configComposer)
-// bot.use(clientComposer)
+bot.use(clientComposer)
 
 
 
