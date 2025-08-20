@@ -43,8 +43,8 @@ bot.catch((err) => {
     ctx.reply("❌ Botda xato bo'ldi").catch(() => {})
 });
 
+console.log("Bot is running...")
 await bot.start({
     drop_pending_updates: true
 })
 
-console.log("Bot is running...")
