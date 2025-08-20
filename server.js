@@ -1,4 +1,4 @@
-import express from "express"
+// import express from "express"
 import { Bot} from "grammy"
 import dotenv from "dotenv"
 import cors from 'cors'
@@ -14,9 +14,9 @@ const TOKEN = process.env.BOT_TOKEN
 
 
 const bot = new Bot(TOKEN)
-const app = express()
-app.use(express.json())
-app.use(cors())
+// const app = express()
+// app.use(express.json())
+// app.use(cors())
 
 bot.use(configComposer)
 bot.use(clientComposer)
