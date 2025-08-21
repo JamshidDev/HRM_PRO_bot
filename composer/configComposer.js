@@ -52,9 +52,7 @@ bot.use(async (ctx, next) => {
     const isLogOut = ctx.session.session_db.isLogOut
 
     if(!isAuth && !isLogOut){
-        console.log('ok1')
         const [response, error] = await authService.checkUserInfo({id:ctx.from.id})
-        console.log('ok2')
 
         if(response.data){
             console.log("🔸 Bazada user ma'lumotlari topildi...")
