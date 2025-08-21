@@ -97,6 +97,8 @@ export async function registerConversation(conversation, ctx){
         const msg = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
         await authService.registerUser({data:{uuid, chat_id:ctx.from.id}})
         await ctx.api.deleteMessage(ctx.chat.id, msg.message_id)
+        conversation.session.session_db.isAuth = true
+        conversation.session.session_db.isLogOut = false
         await mainConversation(conversation, ctx)
 
     }else{

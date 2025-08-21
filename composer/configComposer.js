@@ -53,7 +53,6 @@ bot.use(async (ctx, next) => {
 
     if(!isAuth && !isLogOut){
         const [response, error] = await authService.checkUserInfo({id:ctx.from.id})
-
         if(response.data){
             console.log("🔸 Bazada user ma'lumotlari topildi...")
             setUserId(response.data.user.uuid)

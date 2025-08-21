@@ -25,6 +25,8 @@ export async function mainConversation(conversation, ctx){
 
 export async function myServiceConversation(conversation, ctx){
     const [response,err] = await authService.servicesUser()
+    console.log(err)
+    console.log(response)
     if(response?.data.length===0){
         await ctx.reply(ctx.t('noService'),{parse_mode:"HTML"})
         return
