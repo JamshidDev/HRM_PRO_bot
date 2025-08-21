@@ -1,6 +1,6 @@
 import {InlineKeyboard} from "grammy"
 
-const pageSize = 5
+const pageSize = 15
 
 function escapeMarkdownV2(text) {
     return text?.toString().replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, "\\$&")
