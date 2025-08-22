@@ -45,6 +45,7 @@ totalTerminal = Terminallar soni: *{$n}*
 currentPage = Joriy sahifa: *{$n}*
 passedPage = Siz {$n}-sahifaga o'tdingiz ✅
 service_dc1a0615566e11a7ebe5f6198e3a0aec = 🔰 Terminallar
+service_8514a7291109c3bbbdbafb909070e8b9 = 🔰 Oylik maosh
 
 
 backToMainMenu =🔙 Orqaga

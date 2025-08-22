@@ -8,7 +8,11 @@ const myServiceList = [
     {
         name:"service_dc1a0615566e11a7ebe5f6198e3a0aec",
         key:'dc1a0615566e11a7ebe5f6198e3a0aec'
-    }
+    },
+    {
+        name:"service_8514a7291109c3bbbdbafb909070e8b9",
+        key:'8514a7291109c3bbbdbafb909070e8b9'
+    },
 ]
 
 
@@ -25,8 +29,6 @@ export async function mainConversation(conversation, ctx){
 
 export async function myServiceConversation(conversation, ctx){
     const [response,err] = await authService.servicesUser()
-    console.log(err)
-    console.log(response)
     if(response?.data.length===0){
         await ctx.reply(ctx.t('noService'),{parse_mode:"HTML"})
         return
@@ -34,7 +36,7 @@ export async function myServiceConversation(conversation, ctx){
 
     const keyboard = new Keyboard()
     response.data.forEach((item)=>{
-        keyboard.text(ctx.t(`service_${item.key}`)).row()
+        keyboard.text(ctx.t(`service_${item}`)).row()
     })
 
     await ctx.reply(ctx.t('serviceName'),
@@ -62,6 +64,12 @@ export async function myServiceConversation(conversation, ctx){
 
     const key = myServiceList.map(v=>({...v, name:ctx.t(v.name)})).filter(v=>v.name === ctx.message.text)?.[0]?.key
     conversation.session.session_db.selectedServiceKey = key
+    console.log(key)
+    if(key===myServiceList[1].key){
+        await ctx.reply("Tez orada iwga tuwadi...")
+        await mainConversation(conversation, ctx)
+        return
+    }
     const [response2,_] = await authService.getServices({params:{service:key}})
     const data = response2.data
 
