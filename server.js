@@ -41,7 +41,11 @@ bot.command('start', async (ctx) => {
 bot.catch((err) => {
     const ctx = err.ctx;
     console.error(`Xato update ${ctx.update.update_id} da:`, err.error);
-    ctx.reply("❌ Botda xato bo'ldi").catch(() => {})
+    ctx.reply(`
+<i>❌ Serverda xatolik yuz berdi...</i>
+
+Adminga xabarni yuboring...
+    `).catch(() => {})
 });
 
 console.log("Bot is running...")

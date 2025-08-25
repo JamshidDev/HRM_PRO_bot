@@ -39,8 +39,7 @@ bot.use(chatMembers(adapter))
 bot.use(conversations())
 
 bot.use(async (ctx, next) => {
-    let permissions = [ctx.t('backToMainMenu')]
-    console.log(permissions.includes(ctx.message?.text))
+    let permissions = [ctx.t('backToMainMenu'),ctx.t('backToServiceMenu') ]
     if (permissions.includes(ctx.message?.text)) {
         const stats = await ctx.conversation.active();
         for (let key of Object.keys(stats)) {
@@ -54,7 +53,6 @@ bot.use(async (ctx, next) => {
     if(!isAuth && !isLogOut){
         const [response, error] = await authService.checkUserInfo({id:ctx.from.id})
         if(response.data){
-            console.log("🔸 Bazada user ma'lumotlari topildi...")
             setUserId(response.data.user.uuid)
             ctx.session.session_db.isAuth = true
             ctx.config = {

@@ -38,9 +38,14 @@ bot.filter(ctx=>ctx.config.isAuth).filter(hears("logOutBtn"), async (ctx) => {
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("ServiceBtn"), async (ctx) => {
     await ctx.conversation.enter("myServiceConversation")
 })
+bot.filter(ctx=>ctx.config.isAuth).filter(hears("backToServiceMenu"), async (ctx) => {
+    await ctx.conversation.enter("myServiceConversation")
+})
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("backToMainMenu"), async (ctx) => {
     await ctx.conversation.enter("mainConversation")
 });
+
+
 
 
 
@@ -62,6 +67,10 @@ bot.filter(ctx=>ctx.config.isAuth).on("callback_query:data", async ctx => {
             show_alert: false,
         })
     }
+})
+
+bot.command('salary', async (ctx) => {
+    await ctx.conversation.enter("mySalaryConversation")
 })
 
 

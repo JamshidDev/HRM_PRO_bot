@@ -49,4 +49,33 @@ service_8514a7291109c3bbbdbafb909070e8b9 = 🔰 Oylik maosh
 
 
 backToMainMenu =🔙 Orqaga
+backToServiceMenu =🔙 Xizmatlarga qaytish
+backToYearMenu =🔙 Yilga qaytish
 
+notFoundData =<i>⚠️ Tzimda ma'lumot topilmadi</i>
+
+selectYear =<b>Yilni tanlang</b>
+
+    <i>👇 Tugma orqali tanlang!</i>
+
+invalidYear = ⚠️ Noto'g'ri ma'lumot
+
+    <i>👇 Tugma orqali tanlang!</i>
+
+selectMonth =<b>Oyni tanlang</b>
+
+        ▫️ <b>{$n}</b>
+        <i>👇 Tugma orqali tanlang!</i>
+
+month_1 = Yanvar
+month_2 = Fevral
+month_3 = Mart
+month_4 = Aprel
+month_5 = May
+month_6 = Iyul
+month_7 = Iyun
+month_8 = Avgust
+month_9 = Sentyabr
+month_10 = Oktyabr
+month_11 = Noyabr
+month_12 = Dekabr
