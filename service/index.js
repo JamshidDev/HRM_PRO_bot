@@ -3,7 +3,7 @@ import dotenv from "dotenv"
 dotenv.config()
 let userId = null
 const apiUrl = process.env.SERVICE_URL
-const TOKEN = process.env.BOT_TOKEN
+const TOKEN = process.env.API_TOKEN
 
 const instance = axios.create({
     baseURL: `${apiUrl}/api`
