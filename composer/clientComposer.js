@@ -50,11 +50,12 @@ bot.filter(ctx=>ctx.config.isAuth).filter(hears("backToMainMenu"), async (ctx) =
 
 
 bot.filter(ctx=>ctx.config.isAuth).on("callback_query:data", async ctx => {
+    const uuid = await ctx.session.session_db.uuid
     const data = ctx.callbackQuery.data
     if (data.startsWith("page:")) {
         const page = Number(data.split(":")[1])
         const serviceKey = ctx.session.session_db.selectedServiceKey
-        const [response2] = await authService.getServices({ params:{ service:serviceKey } })
+        const [response2] = await authService.getServices({ params:{ service:serviceKey }, uuid })
         console.log(response2.data)
         const dataList = response2.data
 

@@ -1,7 +1,6 @@
 import Keyboards from "../keyboards/index.js"
 import {authService} from "../service/service/index.js"
 import {mainConversation} from "./generalConversation.js"
-import {setUserId} from "../service/index.js"
 
 
 const validatePin = (pin)=>{
@@ -73,7 +72,7 @@ export async function registerConversation(conversation, ctx){
         parse_mode:"HTML"
     })
     const uuid = response?.data.user.uuid
-    setUserId(response?.data.user.uuid)
+    conversation.session.session_db.uuid = response?.data.user.uuid
 
 
 

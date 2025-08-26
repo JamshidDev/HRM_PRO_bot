@@ -35,7 +35,12 @@ const deleteUser =async (payload)=>{
 }
 const servicesUser =async (payload)=>{
     try{
-        const {data} =  await axios.get(`/v1/telegram/menu/services`, {params:payload?.params})
+        const {data} =  await axios.get(`/v1/telegram/menu/services`,
+            {params:payload?.params,
+             headers: payload?.uuid
+                    ? { "Uuid": payload.uuid }
+                    : undefined
+            })
         return [data, null]
     }catch (err){
         return [null, err.response?.data || err.message]
@@ -44,7 +49,11 @@ const servicesUser =async (payload)=>{
 }
 const getServices =async (payload)=>{
     try{
-        const {data} =  await axios.get(`/v1/telegram/menu/get-service`, {params:payload?.params})
+        const {data} =  await axios.get(`/v1/telegram/menu/get-service`, {
+            params:payload?.params,
+            headers: payload?.uuid
+                ? { "Uuid": payload.uuid }
+                : undefined})
         return [data, null]
     }catch (err){
         return [null, err.response?.data || err.message]

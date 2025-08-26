@@ -4,7 +4,7 @@ import {chatMembers} from "@grammyjs/chat-members"
 import {conversations, createConversation} from "@grammyjs/conversations"
 import {registerConversations} from "../conversations/index.js"
 import {authService} from "../service/service/index.js"
-import {setUserId} from "../service/index.js"
+
 //
 // const __filename = fileURLToPath(import.meta.url)
 // const __dirname = path.dirname(__filename)
@@ -26,9 +26,11 @@ bot.use(session({
                 selectedServiceKey:null,
                 isLogOut:false,
                 isAuth:false,
+                uuid:null,
             }
         },
         storage: new MemorySessionStorage(),
+        getSessionKey: (ctx) => ctx.from?.id.toString(),
     },
     conversation: {},
     __language_code: {},
@@ -53,8 +55,8 @@ bot.use(async (ctx, next) => {
     if(!isAuth && !isLogOut){
         const [response, error] = await authService.checkUserInfo({id:ctx.from.id})
         if(response.data){
-            setUserId(response.data.user.uuid)
             ctx.session.session_db.isAuth = true
+            ctx.session.session_db.uuid = response.data.user.uuid
             ctx.config = {
                 isAuth: true
             }

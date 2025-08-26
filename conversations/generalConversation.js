@@ -85,7 +85,9 @@ export async function mainConversation(conversation, ctx){
 
 
 export async function myServiceConversation(conversation, ctx){
-    const [response,err] = await authService.servicesUser()
+    const uuid = conversation.session.session_db.uuid
+    const [response,err] = await authService.servicesUser({uuid})
+    console.log(err)
     if(response?.data.length===0){
         await ctx.reply(ctx.t('noService'),{parse_mode:"HTML"})
         return
@@ -125,9 +127,7 @@ export async function myServiceConversation(conversation, ctx){
         await mySalaryConversation(conversation, ctx)
         return
     }
-    const [response2,error] = await authService.getServices({params:{service:key}})
-    console.log(error)
-    console.log(response2)
+    const [response2,error] = await authService.getServices({params:{service:key}, uuid})
     const data = response2.data
 
 
@@ -145,9 +145,10 @@ export async function myServiceConversation(conversation, ctx){
 
 
 export async function mySalaryConversation(conversation, ctx){
+    const uuid = conversation.session.session_db.uuid
     const serviceKey =conversation.session.session_db.selectedServiceKey
     const {message_id} = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
-    const [response,_] = await authService.getServices({params:{service:serviceKey}})
+    const [response,_] = await authService.getServices({params:{service:serviceKey}, uuid})
     await ctx.api.deleteMessage(ctx.chat.id, message_id)
     if(response?.months.length===0){
         await ctx.reply(ctx.t('notFoundData'),{parse_mode:"HTML"})
@@ -238,7 +239,7 @@ export async function mySalaryConversation(conversation, ctx){
         const selectedMonth = monthList.filter(v=>ctx.t(v.name) === ctx.message.text)[0].id
 
         const loadingMsg = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
-        const [salaryResponse,err] = await authService.getServices({params:{service:salaryKey,year:selectedYear,month:selectedMonth}})
+        const [salaryResponse,err] = await authService.getServices({params:{service:salaryKey,year:selectedYear,month:selectedMonth}, uuid})
         await ctx.api.deleteMessage(ctx.chat.id, loadingMsg.message_id)
         await sendSalaryData(salaryResponse.salary, ctx)
     }
