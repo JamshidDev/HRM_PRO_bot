@@ -50,6 +50,14 @@ Adminga xabarni yuboring...
 
 console.log("Bot is running...")
 await bot.start({
-    drop_pending_updates: true
+    drop_pending_updates: true,
+    allowed_updates: [
+        "my_chat_member",
+        "chat_member",
+        "message",
+        "callback_query",
+        "inline_query",
+        "chat_join_request",
+    ],
 })
 

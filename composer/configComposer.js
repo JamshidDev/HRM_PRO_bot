@@ -1,13 +1,9 @@
 import { Composer, MemorySessionStorage, session } from "grammy"
 import { I18n} from "@grammyjs/i18n"
 import {chatMembers} from "@grammyjs/chat-members"
-import {conversations, createConversation} from "@grammyjs/conversations"
+import {conversations} from "@grammyjs/conversations"
 import {registerConversations} from "../conversations/index.js"
 import {authService} from "../service/service/index.js"
-
-//
-// const __filename = fileURLToPath(import.meta.url)
-// const __dirname = path.dirname(__filename)
 
 const adapter = new MemorySessionStorage()
 const bot = new Composer()
@@ -41,7 +37,7 @@ bot.use(chatMembers(adapter))
 bot.use(conversations())
 
 bot.use(async (ctx, next) => {
-    let permissions = [ctx.t('backToMainMenu'),ctx.t('backToServiceMenu') ]
+    let permissions = [ctx.t('backToMainMenu'),ctx.t('backToServiceMenu'), ctx.t('backToYearMenu'), '/start' ]
     if (permissions.includes(ctx.message?.text)) {
         const stats = await ctx.conversation.active();
         for (let key of Object.keys(stats)) {
@@ -73,6 +69,11 @@ bot.use(async (ctx, next) => {
 
 
     await next()
+})
+
+bot.on("my_chat_member", async (ctx)=>{
+    const status = ctx.update.my_chat_member.new_chat_member.status
+    console.log(status)
 })
 
 registerConversations(bot)

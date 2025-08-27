@@ -43,6 +43,9 @@ bot.filter(ctx=>ctx.config.isAuth).filter(hears("backToServiceMenu"), async (ctx
 })
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("backToMainMenu"), async (ctx) => {
     await ctx.conversation.enter("mainConversation")
+})
+bot.filter(ctx=>ctx.config.isAuth).filter(hears("backToYearMenu"), async (ctx) => {
+    await ctx.conversation.enter("mySalaryConversation")
 });
 
 
