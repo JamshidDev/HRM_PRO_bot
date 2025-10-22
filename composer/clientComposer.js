@@ -2,7 +2,7 @@ import {Composer, Keyboard} from "grammy"
 import {authService} from "../service/service/index.js"
 import {mainConversation} from "../conversations/generalConversation.js"
 import {hears}  from "@grammyjs/i18n"
-import {getMarkdownMsg, getPaginationKeyboard} from "../utils/helper.js"
+import {getMarkdownMsg, getPaginationKeyboard, escapeMarkdownV2} from "../utils/helper.js"
 import Keyboards from "../keyboards/index.js"
 
 const bot = new Composer().chatType('private')
@@ -19,6 +19,9 @@ bot.command('start', async (ctx) => {
     }
 })
 
+bot.command('upload', async (ctx)=>{
+    await ctx.conversation.enter("uploadImageConversation")
+})
 
 
 
@@ -28,7 +31,6 @@ bot.command('start', async (ctx) => {
 bot.filter(hears("loginBtn"), async (ctx) => {
     await ctx.conversation.enter("registerConversation")
 })
-
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("logOutBtn"), async (ctx) => {
     ctx.session.session_db.isAuth = false
     ctx.session.session_db.isLogOut = true
@@ -41,12 +43,18 @@ bot.filter(ctx=>ctx.config.isAuth).filter(hears("ServiceBtn"), async (ctx) => {
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("backToServiceMenu"), async (ctx) => {
     await ctx.conversation.enter("myServiceConversation")
 })
+bot.filter(ctx=>ctx.config.isAuth).filter(hears("backToYearMenu"), async (ctx) => {
+    await ctx.conversation.enter("mySalaryConversation")
+})
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("backToMainMenu"), async (ctx) => {
     await ctx.conversation.enter("mainConversation")
 })
-bot.filter(ctx=>ctx.config.isAuth).filter(hears("backToYearMenu"), async (ctx) => {
-    await ctx.conversation.enter("mySalaryConversation")
-});
+bot.filter(hears("cancelOperation"), async (ctx) => {
+    await ctx.conversation.enter("mainConversation")
+})
+
+
+
 
 
 
@@ -76,6 +84,25 @@ bot.filter(ctx=>ctx.config.isAuth).on("callback_query:data", async ctx => {
 bot.command('salary', async (ctx) => {
     await ctx.conversation.enter("mySalaryConversation")
 })
+bot.filter(ctx=>ctx.config.isAdmin).filter(hears("broadcastMessage"), async (ctx) => {
+    await ctx.conversation.enter("adminMsgConversation")
+})
+
+bot.filter(ctx=>ctx.config.isAuth).filter(hears("SupportBtn"), async (ctx) => {
+    await ctx.reply(ctx.t('supportMsg'), {parse_mode:"HTML"})
+})
+
+bot.filter(ctx=>ctx.config.isAuth).filter(hears("ProfileBtn"), async (ctx) => {
+    await ctx.reply(ctx.t('profileMsg', {
+        fullName:"Raximov Jamshid Shuxrat",
+        position:"Lavozim",
+        organization:"Korxona",
+    }), {parse_mode:"HTML"})
+});
+
+bot.filter(ctx=>ctx.config.isAuth).filter(hears("TurniketBtn"), async (ctx) => {
+    await ctx.conversation.enter("turniketConversation")
+});
 
 
 

@@ -2,18 +2,43 @@ import Keyboards from "../keyboards/index.js"
 import {authService} from "../service/service/index.js"
 import {Keyboard} from "grammy"
 import numeral from "numeral"
-
 import {getMarkdownMsg, getPaginationKeyboard} from "../utils/helper.js"
+import {initialBroadcastMsg} from "../workers/workerOne.js"
+
+function escapeMarkdownV2(text) {
+    return text?.toString().replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, "\\$&")
+}
+
+
+
 
 
 const myServiceList = [
     {
         name:"service_dc1a0615566e11a7ebe5f6198e3a0aec",
-        key:'dc1a0615566e11a7ebe5f6198e3a0aec'
+        key:'dc1a0615566e11a7ebe5f6198e3a0aec',
+        visible:true,       
     },
     {
         name:"service_8514a7291109c3bbbdbafb909070e8b9",
-        key:'8514a7291109c3bbbdbafb909070e8b9'
+        key:'8514a7291109c3bbbdbafb909070e8b9',
+        visible:true, 
+    },
+
+    {
+        name:"service_79e650e47ee425c12099c46d555be0be",
+        key:'79e650e47ee425c12099c46d555be0be',
+        visible:false, 
+    },
+    {
+        name:"service_7812f29bdb5d0bc2c59953461040874b",
+        key:'7812f29bdb5d0bc2c59953461040874b',
+        visible:false, 
+    },
+    {
+        name:"service_aba1a74f92172b27f61c528ddc005640",
+        key:'aba1a74f92172b27f61c528ddc005640',
+        visible:false, 
     },
 ]
 
@@ -68,34 +93,45 @@ const monthList = [
     },
 ]
 
-function escapeMarkdownV2(text) {
-    return text?.toString().replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, "\\$&")
-}
+
+
+
+
+
 
 
 export async function mainConversation(conversation, ctx){
     await ctx.reply(ctx.t('mainMenuText'),
         {
             parse_mode:"HTML",
-            reply_markup:Keyboards.mainKeyboard(ctx.t)
+            reply_markup:Keyboards.mainKeyboard(ctx)
         })
 
 }
 
-
-
 export async function myServiceConversation(conversation, ctx){
     const uuid = conversation.session.session_db.uuid
+    const {message_id: loadingMsgId} = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
     const [response,err] = await authService.servicesUser({uuid})
-    console.log(err)
+    await ctx.api.deleteMessage(ctx.chat.id, loadingMsgId)
+
     if(response?.data.length===0){
         await ctx.reply(ctx.t('noService'),{parse_mode:"HTML"})
         return
     }
 
+    // Show only services that are visible in myServiceList and exist in API response (key === id)
+    const availableServiceIds = response.data.map(v => v.id)
+    const visibleServices = myServiceList.filter(s => s.visible && availableServiceIds.includes(s.key))
+
+    if (visibleServices.length === 0){
+        await ctx.reply(ctx.t('noService'),{parse_mode:"HTML"})
+        return
+    }
+
     const keyboard = new Keyboard()
-    response.data.forEach((item)=>{
-        keyboard.text(ctx.t(`service_${item}`)).row()
+    visibleServices.forEach((item)=>{
+        keyboard.text(ctx.t(item.name)).row()
     })
 
     await ctx.reply(ctx.t('serviceName'),
@@ -106,7 +142,7 @@ export async function myServiceConversation(conversation, ctx){
 
     ctx = await conversation.wait()
     function validateService(name){
-        return myServiceList.map(v=>ctx.t(v.name)).includes(name)
+        return visibleServices.map(v=>ctx.t(v.name)).includes(name)
     }
 
     if (!validateService(ctx.message?.text)) {
@@ -120,14 +156,26 @@ export async function myServiceConversation(conversation, ctx){
         } while (!validateService(ctx.message?.text))
     }
 
-
-    const key = myServiceList.map(v=>({...v, name:ctx.t(v.name)})).filter(v=>v.name === ctx.message.text)?.[0]?.key
+    const selected = visibleServices.find(v => ctx.t(v.name) === ctx.message.text)
+    const key = selected?.key
     conversation.session.session_db.selectedServiceKey = key
     if(key===myServiceList[1].key){
         await mySalaryConversation(conversation, ctx)
         return
+    }else if(key===myServiceList[2].key){
+        await uploadImageConversation(conversation, ctx)
+        return
+    }else if(key===myServiceList[3].key){
+        await verifiedTrunstileImageConversation(conversation, ctx)
+        return
+    }else if(key===myServiceList[4].key){
+        await processTrunstileImageConversation(conversation, ctx)
+        return
     }
+
+    const {message_id: loadingMsgId2} = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
     const [response2,error] = await authService.getServices({params:{service:key}, uuid})
+    await ctx.api.deleteMessage(ctx.chat.id, loadingMsgId2)
     const data = response2.data
 
 
@@ -137,12 +185,7 @@ export async function myServiceConversation(conversation, ctx){
         reply_markup:getPaginationKeyboard(data,1,ctx.t)
     })
     await mainConversation(conversation, ctx)
-
-
-
-
 }
-
 
 export async function mySalaryConversation(conversation, ctx){
     const uuid = conversation.session.session_db.uuid
@@ -262,6 +305,188 @@ export async function mySalaryConversation(conversation, ctx){
 
 }
 
+export async function adminMsgConversation(conversation, ctx){
+    await ctx.reply(ctx.t('adminBroadcastMessage'),{parse_mode:"HTML", reply_markup:Keyboards.broadcastMsgKeyboard(ctx.t)})
+    ctx = await conversation.wait()
+    const validateMsg = (msg)=>{
+        return [ctx.t('technicalMsgMenu'),ctx.t('salaryMsgMenu'),ctx.t('customMsgMenu'),].includes(msg)
+    }
+    if (!validateMsg(ctx.message?.text)) {
+        do {
+            await ctx.reply(ctx.t('invalidBroadcastMsg'),
+                {
+                    parse_mode: "HTML",
+                }
+            )
+            ctx = await conversation.wait()
+        } while (!validateMsg(ctx.message?.text))
+    }
+
+    const selectedMenu = ctx.message.text
+    if(selectedMenu === ctx.t('technicalMsgMenu')){
+        await initialBroadcastMsg(ctx, 0, 0)
+        await mainConversation(conversation, ctx)
+    }else{
+        await ctx.reply(ctx.t('comingSoon'),{parse_mode: "HTML",})
+        await mainConversation(conversation, ctx)
+    }
+}
+
+export async function uploadImageConversation(conversation, ctx){
+  await ctx.reply(ctx.t('uploadImage'), {
+        parse_mode: "HTML",
+      reply_markup:Keyboards.cancelOperationKeyboard(ctx.t)
+  })
+
+    function getImageFileId(message) {
+        const lastPhotoId = message?.photo?.at(-1)?.file_id
+        if (lastPhotoId) return lastPhotoId
+        const isImageDoc = message?.document?.mime_type && message.document.mime_type.startsWith('image/')
+        return isImageDoc ? message.document.file_id : null
+    }
+
+    do {
+        ctx = await conversation.wait()
+        if (!getImageFileId(ctx?.message)) {
+            await ctx.reply(ctx.t('invalidImageUpload'), {
+                parse_mode: "HTML",
+                reply_markup: Keyboards.cancelOperationKeyboard(ctx.t)
+            })
+        }
+    } while (!getImageFileId(ctx?.message))
+
+    const fileId = getImageFileId(ctx.message)
+    const file = await ctx.api.getFile(fileId)
+    const fullLink = `https://api.telegram.org/file/bot${ctx.api.token}/${file.file_path}`
+
+    await ctx.reply(ctx.t('confirmPicture'), {
+        parse_mode: "HTML",
+        reply_markup: Keyboards.yesOrNoKeyboard(ctx.t)
+    })
+
+    function validateAnswer(text){
+        return [ctx.t('yes'), ctx.t('no')].includes(text)
+    }
+
+    ctx = await conversation.wait()
+
+    if (!validateAnswer(ctx.message?.text)) {
+        do {
+            await ctx.reply(ctx.t('invalidShortAnswer'), {
+                parse_mode: "HTML",
+                reply_markup: Keyboards.yesOrNoKeyboard(ctx.t)
+            })
+            ctx = await conversation.wait()
+        } while (!validateAnswer(ctx.message?.text))
+    }
+
+    if (ctx.message.text === ctx.t('no')) {
+        await uploadImageConversation(conversation, ctx)
+        return
+    }
+
+    const serviceKey = conversation.session.session_db.selectedServiceKey
+    const uuid = conversation.session.session_db.uuid
+
+    // Send loading message
+    const loadingMessage = await ctx.reply("Kuting...")
+
+    const data = {
+        url: fullLink,
+        service:serviceKey,
+
+    }
+    const [response,err] = await authService.setService({uuid, data})
+    
+    // Delete loading message
+    await ctx.api.deleteMessage(ctx.chat.id, loadingMessage.message_id)
+
+    if(err){
+        console.log(err);
+        
+        await ctx.reply(ctx.t('uploadError'), {parse_mode:"HTML"})
+        await mainConversation(conversation, ctx)
+        return
+    }
+
+    await ctx.reply(ctx.t('uploadSuccess'), {parse_mode:"HTML"})
+    await mainConversation(conversation, ctx)
+
+
+}
+
+export async function verifiedTrunstileImageConversation(conversation, ctx){
+    const loadingMessage = await ctx.reply(ctx.t('loading'), {parse_mode:"HTML"})
+    const service = conversation.session.session_db.selectedServiceKey
+    const uuid = conversation.session.session_db.uuid
+    const [response,err] = await authService.getServices({uuid, params:{service}})
+    // Delete loading message
+    await ctx.api.deleteMessage(ctx.chat.id, loadingMessage.message_id)
+    
+    if (err) {
+        console.log("Error:", err);
+        await ctx.reply(ctx.t('errorOccurred'));
+        return;
+    }
+    
+    if (response && response.data) {
+        try {
+            await ctx.replyWithPhoto(response.data, {
+                caption: ctx.t('turniketVerifiedImageCaption')
+            })
+            await mainConversation(conversation, ctx)
+            return
+        } catch (photoError) {
+            console.log("Photo send error:", photoError);
+            await ctx.reply(ctx.t('photoSendError'));
+        }
+    } else {
+        console.log("Response:", response);
+        await ctx.reply(ctx.t('noVerifiedImage'));
+        await  myServiceConversation(conversation, ctx)
+        return
+    }
+}
+
+export async function processTrunstileImageConversation(conversation, ctx){
+    const loadingMessage = await ctx.reply(ctx.t('loading'), {parse_mode:"HTML"})
+    const service = conversation.session.session_db.selectedServiceKey
+    const uuid = conversation.session.session_db.uuid
+    const [response,err] = await authService.getServices({uuid, params:{service}})
+    console.log(response);
+    
+    // Delete loading message
+    await ctx.api.deleteMessage(ctx.chat.id, loadingMessage.message_id)
+    
+    if (err) {
+        console.log("Error:", err);
+        await ctx.reply(ctx.t('errorOccurred'));
+        return;
+    }
+    
+    if (response && response.data) {
+        try {
+            await ctx.replyWithPhoto(response.data, {
+                caption: ctx.t('processImageCaption')
+            })
+            await mainConversation(conversation, ctx)
+            return
+        } catch (photoError) {
+            console.log("Photo send error:", photoError);
+            await ctx.reply(ctx.t('photoSendError'));
+        }
+    } else {
+        console.log("Response:", response);
+        await ctx.reply(ctx.t('noProcessImage'))
+        await  myServiceConversation(conversation, ctx)
+        return
+    }
+}
+
+
+
+
+
 const sendSalaryData =async (salaryData, ctx)=>{
     for (const v of salaryData) {
 
@@ -308,3 +533,66 @@ const sendSalaryData =async (salaryData, ctx)=>{
         })
     }
 }
+
+export async function turniketConversation(conversation, ctx){
+    const uuid = conversation.session.session_db.uuid
+    const {message_id: loadingMsgId} = await ctx.reply(ctx.t('loading'), {parse_mode:"HTML"})
+    const [response] = await authService.servicesUser({uuid})
+    await ctx.api.deleteMessage(ctx.chat.id, loadingMsgId)
+
+    const availableServiceIds = response?.data?.map(v => v.id) || []
+    const turniketServices = myServiceList.filter(s => !s.visible && availableServiceIds.includes(s.key))
+
+    if (turniketServices.length === 0){
+        await ctx.reply(ctx.t('noService'), {parse_mode: "HTML"})
+        await mainConversation(conversation, ctx)
+        return
+    }
+
+    const keyboard = new Keyboard()
+    turniketServices.forEach((s)=>{
+        keyboard.text(ctx.t(s.name)).row()
+    })
+
+    await ctx.reply(ctx.t('turniketMenuText'), {
+        parse_mode:"HTML",
+        reply_markup:keyboard.text(ctx.t('backToMainMenu')).resized()
+    })
+
+    ctx = await conversation.wait()
+
+    // Back handling
+    if (ctx.message?.text === ctx.t('backToMainMenu')){
+        await mainConversation(conversation, ctx)
+        return
+    }
+
+    const isValid = turniketServices.map(v=>ctx.t(v.name)).includes(ctx.message?.text)
+    if (!isValid){
+        await ctx.reply(ctx.t('invalidTurniketChoice'))
+        await turniketConversation(conversation, ctx)
+        return
+    }
+
+    const selected = turniketServices.find(v => ctx.t(v.name) === ctx.message.text)
+    const key = selected?.key
+    conversation.session.session_db.selectedServiceKey = key
+
+    // Route based on selected key
+    if(key===myServiceList[2].key){
+        await uploadImageConversation(conversation, ctx)
+        return
+    }else if(key===myServiceList[3].key){
+        await verifiedTrunstileImageConversation(conversation, ctx)
+        return
+    }else if(key===myServiceList[4].key){
+        await processTrunstileImageConversation(conversation, ctx)
+        return
+    }
+
+    // Fallback to main
+    await mainConversation(conversation, ctx)
+}
+
+
+

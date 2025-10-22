@@ -25,7 +25,9 @@ mainMenuText =⚡ Asosiy menyu ⚡
 SupportBtn =🆘 Yordam
 ProfileBtn =ℹ️ Ma'lumotlarim
 ServiceBtn =🛜 Xizmatlar
+TurniketBtn =♻️ Turniket
 logOutBtn =🚪 Chiqish
+broadcastMessage =✍️ Xabar yuborish
 preview =⬅️  Oldingi
 next =Keyingi ➡️
 
@@ -46,6 +48,9 @@ currentPage = Joriy sahifa: *{$n}*
 passedPage = Siz {$n}-sahifaga o'tdingiz ✅
 service_dc1a0615566e11a7ebe5f6198e3a0aec = 🔰 Terminallar
 service_8514a7291109c3bbbdbafb909070e8b9 = 🔰 Oylik maosh
+service_79e650e47ee425c12099c46d555be0be = 🔰 Rasm yuklash
+service_7812f29bdb5d0bc2c59953461040874b = 🔰 Tasdiqlangan Rasm
+service_aba1a74f92172b27f61c528ddc005640 = 🔰 Jarayondagi Rasm
 
 
 backToMainMenu =🔙 Orqaga
@@ -79,3 +84,81 @@ month_9 = Sentyabr
 month_10 = Oktyabr
 month_11 = Noyabr
 month_12 = Dekabr
+
+adminBroadcastMessage = <b>⚠️ Barcha foydalanuvchilarga xabar yuborish</b>
+    <i>Xabar turini tanlang!</i>
+
+invalidBroadcastMsg = ⚠️ Noto'g'ri ma'lumot
+
+    <i>👇 Tugma orqali tanlang!</i>
+
+technicalMsgMenu = 🛠 Texnik xabarnoma
+salaryMsgMenu = 💰 Ish haqi xabarnoma
+customMsgMenu = 📝 Forward xabarnoma
+
+supportMsg = <b>📩 Hurmatli foydalanuvchi!</b>
+    <i>Savollaringiz yoki muammolaringiz bo‘lsa, bizning qo‘llab-quvvatlash jamoamizga murojaat qilishingiz mumkin.</i>
+    <i>Biz sizga imkon qadar tezroq yordam beramiz. 🙌</i>
+
+    <i>📌 Qo‘llab-quvvatlash:</i>
+    👨‍💻 Telegram: @JAMACODER
+    👨‍💻 Telegram: @losemanki6656
+
+profileMsg = <b>Malumotlarim</b>
+    👤Ism: <b>{$fullName}</b>
+
+    🔹 Korxona:
+        <b>{$organization}</b>
+
+    🔸 Lavozim:
+            <b>{$position}</b>
+
+uploadImage = 📤 Iltimos rasm yuboring!
+
+cancelOperation = 🔴 Bekor qilish
+
+confirmPicture = Haqiqattan ham ushbu rasmni yubormoqchimisiz?
+
+invalidImageUpload = ⚠️ Noto'g'ri ma'lumot yuklandi!
+
+    <i>Iltimos faqat rasm yuboring!</i>
+
+uploadSuccess = ✅ <b>Muvaffaqiyatli yuklandi!</b>
+
+uploadError = ❌ <b>Xatolik yuz berdi!</b>
+
+    <i>Iltimos qaytadan urinib ko'ring.</i>
+
+errorOccurred = Xatolik yuz berdi. Qaytadan urinib ko'ring.
+
+turniketVerifiedImageCaption = Turniket uchun tasdiqlangan rasmingiz
+
+photoSendError = Rasm yuborishda xatolik yuz berdi.
+
+imageNotFound = Rasm topilmadi.
+
+processImageCaption = Jarayondagi rasmingiz
+
+noProcessImage = Sizda jarayondagi rasm yo'q
+
+noVerifiedImage = Sizda tasdiqlangan rasm yo'q
+
+turniketMenuText = ♻️ <b>Turniket menyusi</b>
+
+    <i>Kerakli xizmatni tanlang:</i>
+
+verifiedImageBtn = ✅ Tasdiqlangan rasm
+
+processImageBtn = ⏳ Jarayondagi rasm
+
+invalidTurniketChoice = ⚠️ Noto'g'ri tanlov!
+
+    <i>Iltimos tugma orqali tanlang!</i>
+
+
+
+
+
+
+
+

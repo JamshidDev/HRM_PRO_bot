@@ -1,8 +1,15 @@
 import {InlineKeyboard} from "grammy"
+import dotenv from "dotenv"
+import cron from "node-cron"
+import {initialBroadcastMsg} from "../workers/workerOne.js"
 
+
+dotenv.config()
+
+const notificationId = process.env.NOTIFICATION_ID
 const pageSize = 15
 
-function escapeMarkdownV2(text) {
+export function escapeMarkdownV2(text) {
     return text?.toString().replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, "\\$&")
 }
 
@@ -30,4 +37,23 @@ const getPaginationKeyboard = (data,page=1,t)=>{
     return keyboard
 }
 
-export {getMarkdownMsg, getPaginationKeyboard}
+const noteLogger = async (bot, title, msg, error=true)=>{
+    await bot.api.sendMessage(notificationId, `
+*${error? '⚠️' : '✅'} ${error? title : 'Xabar'}*
+
+${error? 'Error message:':'Message'}
+>${escapeMarkdownV2(msg)}`
+,{parse_mode:"MarkdownV2"} )
+}
+
+const initialCronJob = (bot)=>{
+    console.log("🕑 cron job ishga tushdi — O‘zbekiston vaqti bo‘yicha 07:00 da")
+    cron.schedule("0 7 * * *", async () => {
+        await noteLogger(bot, null, "🕑 Cron job ishga tushdi — O‘zbekiston vaqti bo‘yicha 07:00 da", false)
+        await initialBroadcastMsg(bot, 1, 1)
+    },{
+        timezone: "Asia/Tashkent"
+    })
+}
+
+export {getMarkdownMsg, getPaginationKeyboard, noteLogger, initialCronJob}
