@@ -129,6 +129,8 @@ uploadError = ❌ <b>Xatolik yuz berdi!</b>
 
     <i>Iltimos qaytadan urinib ko'ring.</i>
 
+alreadyUploaded = ⚠️ <b>Siz allaqachon rasm yuklagansiz!</b>
+
 errorOccurred = Xatolik yuz berdi. Qaytadan urinib ko'ring.
 
 turniketVerifiedImageCaption = Turniket uchun tasdiqlangan rasmingiz

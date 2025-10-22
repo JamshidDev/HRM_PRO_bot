@@ -397,13 +397,17 @@ export async function uploadImageConversation(conversation, ctx){
 
     }
     const [response,err] = await authService.setService({uuid, data})
-    
     // Delete loading message
     await ctx.api.deleteMessage(ctx.chat.id, loadingMessage.message_id)
+    
+    if(!response.data.add){
+        await ctx.reply(ctx.t('alreadyUploaded'), {parse_mode:"HTML"})
+        await mainConversation(conversation, ctx)
+        return
+    }
 
     if(err){
         console.log(err);
-        
         await ctx.reply(ctx.t('uploadError'), {parse_mode:"HTML"})
         await mainConversation(conversation, ctx)
         return
