@@ -1,6 +1,7 @@
 import Keyboards from "../keyboards/index.js"
 import {authService} from "../service/service/index.js"
 import {mainConversation} from "./generalConversation.js"
+import { escapeHTML } from "../utils/helper.js"
 
 
 const validatePin = (pin)=>{
@@ -12,7 +13,7 @@ const validatePin = (pin)=>{
 export async function registerConversation(conversation, ctx){
     await ctx.reply(ctx.t('loginSystem',
         {id:ctx.from.id,
-         name:ctx.from.first_name
+         name:escapeHTML(ctx.from.first_name)
         }), {
         parse_mode:"HTML",
         reply_markup:Keyboards.phoneKeyboard(ctx.t)

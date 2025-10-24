@@ -1,7 +1,7 @@
 import axios from "../index.js"
 const checkUserInfo =async (payload)=>{
     try{
-        const {data} =  await axios.get(`/v1/telegram/${payload.id}`, {params:payload?.params})
+        const {data} =  await axios.get(`/v1/telegram/auth/${payload.id}`, {params:payload?.params})
         return [data, null]
     }catch (err){
         return [null, err.response?.data || err.message]
@@ -10,7 +10,7 @@ const checkUserInfo =async (payload)=>{
 }
 const checkRegisterUser =async (payload)=>{
     try{
-        const {data} =  await axios.post(`/v1/telegram/check`,payload?.data)
+        const {data} =  await axios.post(`/v1/telegram/auth/check`,payload?.data)
         return [data, null]
     }catch (err){
         return [null, err.response?.data || err.message]
@@ -19,7 +19,7 @@ const checkRegisterUser =async (payload)=>{
 }
 const registerUser =async (payload)=>{
     try{
-        const {data} = await axios.post(`/v1/telegram/register`, payload?.data)
+        const {data} = await axios.post(`/v1/telegram/auth/register`, payload?.data)
         return [data, null]
     }catch (err){
         return [null, err.response?.data || err.message]
@@ -27,7 +27,7 @@ const registerUser =async (payload)=>{
 }
 const deleteUser =async (payload)=>{
     try{
-        const {data} = await axios.delete(`/v1/telegram/${payload.id}`)
+        const {data} = await axios.delete(`/v1/telegram/auth/${payload.id}`)
         return [data, null]
     }catch (err){
         return [null, err.response?.data || err.message]
@@ -106,6 +106,20 @@ const setService =async (payload)=>{
 
 }
 
+const getProfile =async (payload)=>{
+    try{
+        const {data} =  await axios.get(`/v1/telegram/profile`, {
+            params:payload?.params,
+            headers: payload?.uuid
+                ? { "Uuid": payload.uuid }
+                : undefined})
+        return [data, null]
+    }catch (err){
+        return [null, err.response?.data || err.message]
+    }
+
+}
+
 
 
 
@@ -121,4 +135,5 @@ export const authService = {
     getUsers,
     detachUsers,
     setService,
+    getProfile,
 }

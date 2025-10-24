@@ -112,10 +112,10 @@ profileMsg = <b>Malumotlarim</b>
     👤Ism: <b>{$fullName}</b>
 
     🔹 Korxona:
-        <b>{$organization}</b>
+        <i>{$organization}</i>
 
     🔸 Lavozim:
-            <b>{$position}</b>
+            <i>{$position}</i>
 
 uploadImage = 📤 Iltimos rasm yuboring!
 

@@ -13,6 +13,15 @@ export function escapeMarkdownV2(text) {
     return text?.toString().replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, "\\$&")
 }
 
+export function escapeHTML(text) {
+    return text
+      ?.toString()
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+  }
+
 const getMarkdownMsg = (data,t, page=1)=>{
     const totalItems = data.length
     const start = (page-1) * pageSize
