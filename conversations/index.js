@@ -9,6 +9,7 @@ import {
     verifiedTrunstileImageConversation,
     processTrunstileImageConversation,
     turniketConversation,
+    selectDateConversation,
 } from "./generalConversation.js"
 
 
@@ -22,5 +23,6 @@ export function registerConversations(composer) {
     composer.use(createConversation(verifiedTrunstileImageConversation))
     composer.use(createConversation(processTrunstileImageConversation))
     composer.use(createConversation(turniketConversation))
+    composer.use(createConversation(selectDateConversation))
 
 }

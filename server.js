@@ -45,7 +45,9 @@ bot.catch((err) => {
 <i>❌ Serverda xatolik yuz berdi...</i>
 
 Adminga xabarni yuboring...
-    `).catch(() => {})
+    `, {
+        parse_mode:"HTML"
+    }).catch(() => {})
 });
 
 await bot.start({

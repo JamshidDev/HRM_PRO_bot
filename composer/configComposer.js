@@ -59,7 +59,8 @@ bot.use(async (ctx, next) => {
 
     if(!isAuth && !isLogOut){
         const [response, error] = await authService.checkUserInfo({id:ctx.from.id})
-        if(response.data){
+
+        if(response?.data){
             ctx.session.session_db.isAuth = true
             ctx.session.session_db.uuid = response.data.user.uuid
             ctx.config.isAuth = true

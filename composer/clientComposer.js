@@ -2,7 +2,7 @@ import {Composer, Keyboard} from "grammy"
 import {authService} from "../service/service/index.js"
 import {mainConversation} from "../conversations/generalConversation.js"
 import {hears}  from "@grammyjs/i18n"
-import {getMarkdownMsg, getPaginationKeyboard, escapeMarkdownV2} from "../utils/helper.js"
+import {getMarkdownMsg, getPaginationKeyboard, escapeMarkdownV2, getPaginationEventKeyboard,getMarkdownMsgEvent} from "../utils/helper.js"
 import Keyboards from "../keyboards/index.js"
 
 const bot = new Composer().chatType('private')
@@ -63,21 +63,34 @@ bot.filter(hears("cancelOperation"), async (ctx) => {
 bot.filter(ctx=>ctx.config.isAuth).on("callback_query:data", async ctx => {
     const uuid = await ctx.session.session_db.uuid
     const data = ctx.callbackQuery.data
-    if (data.startsWith("page:")) {
-        const page = Number(data.split(":")[1])
-        const serviceKey = ctx.session.session_db.selectedServiceKey
-        const [response2] = await authService.getServices({ params:{ service:serviceKey }, uuid })
-        console.log(response2.data)
-        const dataList = response2.data
+    const isEvent =data.startsWith("event:")
+    console.log(isEvent);
+    console.log(data.startsWith("page:"));
+    
 
-        await ctx.editMessageText(getMarkdownMsg(dataList, ctx.t, page), {
-            parse_mode: "MarkdownV2",
-            reply_markup: getPaginationKeyboard(dataList, page, ctx.t)
-        })
-        await ctx.answerCallbackQuery({
-            text: ctx.t('passedPage', {n:page}),
-            show_alert: false,
-        })
+    
+    
+    if (data.startsWith("page:") || data.startsWith("event:")) {
+        const page = Number(data.split(":")[1])
+        const serviceKey =isEvent? '708f8b59a77f3ec5c5f936a514513ece' :  'dc1a0615566e11a7ebe5f6198e3a0aec'
+        const [response2] = await authService.getServices({ params:{ service:serviceKey }, uuid })
+        const dataList = response2.data
+        console.log(dataList);
+        
+        
+        const MarkDownContent = isEvent? getMarkdownMsgEvent(dataList, ctx.t, page) : getMarkdownMsg(dataList, ctx.t, page)
+        const paginationCallback =isEvent? getPaginationEventKeyboard(dataList, page, ctx.t) : getPaginationKeyboard(dataList, page, ctx.t)
+
+    await ctx.editMessageText(MarkDownContent, {
+        parse_mode: "MarkdownV2",
+        reply_markup: paginationCallback
+    })
+    await ctx.answerCallbackQuery({
+        text: ctx.t('passedPage', {n:page}),
+        show_alert: false,
+    })
+
+        
     }
 })
 
@@ -103,6 +116,10 @@ bot.filter(ctx=>ctx.config.isAuth).filter(hears("ProfileBtn"), async (ctx) => {
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("TurniketBtn"), async (ctx) => {
     await ctx.conversation.enter("turniketConversation")
 });
+
+bot.command('test', async(ctx)=>{
+    await ctx.conversation.enter("selectDateConversation")
+})
 
 
 

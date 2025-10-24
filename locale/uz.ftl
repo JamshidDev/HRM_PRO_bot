@@ -31,6 +31,9 @@ broadcastMessage =✍️ Xabar yuborish
 preview =⬅️  Oldingi
 next =Keyingi ➡️
 
+previewEvent =👈 Oldingi
+nextEvent =Keyingi 👉
+
 logOutedMsg = Tizimdan chiqdingiz
 reLogin =🔒 Qayta tizimga kirish
 comingSoon =<i>🎯 Tez orqada ishga tushishi reja qilingan...</i>
@@ -51,6 +54,7 @@ service_8514a7291109c3bbbdbafb909070e8b9 = 🔰 Oylik maosh
 service_79e650e47ee425c12099c46d555be0be = 🔰 Rasm yuklash
 service_7812f29bdb5d0bc2c59953461040874b = 🔰 Tasdiqlangan Rasm
 service_aba1a74f92172b27f61c528ddc005640 = 🔰 Jarayondagi Rasm
+service_708f8b59a77f3ec5c5f936a514513ece = 🔰 Turniket hodisalar
 
 
 backToMainMenu =🔙 Orqaga
@@ -115,6 +119,14 @@ profileMsg = <b>Malumotlarim</b>
 
 uploadImage = 📤 Iltimos rasm yuboring!
 
+    <b>☝️ Rasm uchun talablar</b>
+    <i>1. Yuzning hech bir qismi (ko‘z, burun, og‘iz, peshona) soya, niqob, ko‘zoynak, soch yoki boshqa narsalar bilan berkitilmasin.</i>
+    <i>2. Rasm fonida boshqa odamlar, rangli naqshlar yoki yorqin obyektlar bo‘lmasin. Silliq, och fon (Devor) tavsiya etiladi.</i>
+    <i>3. Yuzi yaxshi yoritilgan, qorong‘u yoki haddan tashqari yorqin joyda tushgan suratlar tavsiya etilmaydi.</i>
+    <i>4. Yuz kameraga to‘g‘ridan-to‘g‘ri qaragan bo‘lishi lozim.</i>
+    <i>5. Guruhli suratlar yoki boshqa odamlar bilan tushgan suratlar qabul qilinmaydi.</i>
+    <i>6. Fotoshop yoki sun’iy tarzda o‘zgartirilgan rasm tizim tomonidan tanilmaydi va qabul qilinmaydi.</i>
+
 cancelOperation = 🔴 Bekor qilish
 
 confirmPicture = Haqiqattan ham ushbu rasmni yubormoqchimisiz?
@@ -140,6 +152,7 @@ photoSendError = Rasm yuborishda xatolik yuz berdi.
 imageNotFound = Rasm topilmadi.
 
 processImageCaption = Jarayondagi rasmingiz
+    Izoh: <i>{$n}</i>
 
 noProcessImage = Sizda jarayondagi rasm yo'q
 
@@ -156,6 +169,24 @@ processImageBtn = ⏳ Jarayondagi rasm
 invalidTurniketChoice = ⚠️ Noto'g'ri tanlov!
 
     <i>Iltimos tugma orqali tanlang!</i>
+
+selectDateText = 📅 <b>Sana kiriting</b>
+
+    <i>Iltimos sana yyyy-mm-dd formatida kiriting!</i>
+    <i>Masalan: 2024-01-15</i>
+
+invalidDateFormat = ⚠️ <b>Noto'g'ri sana formati!</b>
+
+    <i>Iltimos sana yyyy-mm-dd formatida kiriting!</i>
+    <i>Masalan: 2024-01-15</i>
+
+noData = Ma'lumot yo'q
+
+totalEvent = Hodisalar soni: {$n}
+eventStatus =*Turniket hodisalar ro'yhati*
+
+    🔹 \- Kirish
+    🔸 \- Chiqish
 
 
 

@@ -2,8 +2,9 @@ import Keyboards from "../keyboards/index.js"
 import {authService} from "../service/service/index.js"
 import {Keyboard} from "grammy"
 import numeral from "numeral"
-import {getMarkdownMsg, getPaginationKeyboard} from "../utils/helper.js"
+import {getMarkdownMsg,getMarkdownMsgEvent, getPaginationKeyboard, getPaginationEventKeyboard} from "../utils/helper.js"
 import {initialBroadcastMsg} from "../workers/workerOne.js"
+
 
 function escapeMarkdownV2(text) {
     return text?.toString().replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, "\\$&")
@@ -40,6 +41,11 @@ const myServiceList = [
         key:'aba1a74f92172b27f61c528ddc005640',
         visible:false, 
     },
+    {
+        name:"service_708f8b59a77f3ec5c5f936a514513ece",
+        key:'708f8b59a77f3ec5c5f936a514513ece',
+        visible:false, 
+    }
 ]
 
 const monthList = [
@@ -170,6 +176,10 @@ export async function myServiceConversation(conversation, ctx){
         return
     }else if(key===myServiceList[4].key){
         await processTrunstileImageConversation(conversation, ctx)
+        return
+    }
+    else if(key===myServiceList[5].key){
+        await selectDateConversation(conversation, ctx)
         return
     }
 
@@ -333,88 +343,102 @@ export async function adminMsgConversation(conversation, ctx){
 }
 
 export async function uploadImageConversation(conversation, ctx){
-  await ctx.reply(ctx.t('uploadImage'), {
-        parse_mode: "HTML",
-      reply_markup:Keyboards.cancelOperationKeyboard(ctx.t)
-  })
+    try{
 
-    function getImageFileId(message) {
-        const lastPhotoId = message?.photo?.at(-1)?.file_id
-        if (lastPhotoId) return lastPhotoId
-        const isImageDoc = message?.document?.mime_type && message.document.mime_type.startsWith('image/')
-        return isImageDoc ? message.document.file_id : null
-    }
 
-    do {
-        ctx = await conversation.wait()
-        if (!getImageFileId(ctx?.message)) {
-            await ctx.reply(ctx.t('invalidImageUpload'), {
-                parse_mode: "HTML",
-                reply_markup: Keyboards.cancelOperationKeyboard(ctx.t)
-            })
-        }
-    } while (!getImageFileId(ctx?.message))
-
-    const fileId = getImageFileId(ctx.message)
-    const file = await ctx.api.getFile(fileId)
-    const fullLink = `https://api.telegram.org/file/bot${ctx.api.token}/${file.file_path}`
-
-    await ctx.reply(ctx.t('confirmPicture'), {
-        parse_mode: "HTML",
-        reply_markup: Keyboards.yesOrNoKeyboard(ctx.t)
-    })
-
-    function validateAnswer(text){
-        return [ctx.t('yes'), ctx.t('no')].includes(text)
-    }
-
-    ctx = await conversation.wait()
-
-    if (!validateAnswer(ctx.message?.text)) {
-        do {
-            await ctx.reply(ctx.t('invalidShortAnswer'), {
-                parse_mode: "HTML",
-                reply_markup: Keyboards.yesOrNoKeyboard(ctx.t)
-            })
-            ctx = await conversation.wait()
-        } while (!validateAnswer(ctx.message?.text))
-    }
-
-    if (ctx.message.text === ctx.t('no')) {
-        await uploadImageConversation(conversation, ctx)
-        return
-    }
-
-    const serviceKey = conversation.session.session_db.selectedServiceKey
-    const uuid = conversation.session.session_db.uuid
-
-    // Send loading message
-    const loadingMessage = await ctx.reply("Kuting...")
-
-    const data = {
-        url: fullLink,
-        service:serviceKey,
-
-    }
-    const [response,err] = await authService.setService({uuid, data})
-    // Delete loading message
-    await ctx.api.deleteMessage(ctx.chat.id, loadingMessage.message_id)
+        await ctx.reply(ctx.t('uploadImage'), {
+            parse_mode: "HTML",
+          reply_markup:Keyboards.cancelOperationKeyboard(ctx.t)
+      })
     
-    if(!response.data.add){
-        await ctx.reply(ctx.t('alreadyUploaded'), {parse_mode:"HTML"})
+        function getImageFileId(message) {
+            if(!message?.photo) return null
+            const lastPhoto = message?.photo?.at(-1)
+            const fileSizeMB = (lastPhoto.file_size ?? 0) / (1024 * 1024)
+            return fileSizeMB<20? lastPhoto.file_id : null
+            
+        }
+    
+        do {
+            ctx = await conversation.wait()
+            if (!getImageFileId(ctx?.message)) {
+                await ctx.reply(ctx.t('invalidImageUpload'), {
+                    parse_mode: "HTML",
+                    reply_markup: Keyboards.cancelOperationKeyboard(ctx.t)
+                })
+            }
+        } while (!getImageFileId(ctx?.message))
+    
+        const fileId = getImageFileId(ctx.message)
+        
+        const file = await ctx.api.getFile(fileId)
+        
+        const fullLink = `https://api.telegram.org/file/bot${ctx.api.token}/${file.file_path}`
+    
+        await ctx.reply(ctx.t('confirmPicture'), {
+            parse_mode: "HTML",
+            reply_markup: Keyboards.yesOrNoKeyboard(ctx.t)
+        })
+    
+        function validateAnswer(text){
+            return [ctx.t('yes'), ctx.t('no')].includes(text)
+        }
+    
+        ctx = await conversation.wait()
+    
+        if (!validateAnswer(ctx.message?.text)) {
+            do {
+                await ctx.reply(ctx.t('invalidShortAnswer'), {
+                    parse_mode: "HTML",
+                    reply_markup: Keyboards.yesOrNoKeyboard(ctx.t)
+                })
+                ctx = await conversation.wait()
+            } while (!validateAnswer(ctx.message?.text))
+        }
+    
+        if (ctx.message.text === ctx.t('no')) {
+            await uploadImageConversation(conversation, ctx)
+            return
+        }
+    
+        const serviceKey = conversation.session.session_db.selectedServiceKey
+        const uuid = conversation.session.session_db.uuid
+    
+        // Send loading message
+        const loadingMessage = await ctx.reply("Kuting...")
+    
+        const data = {
+            url: fullLink,
+            service:serviceKey,
+    
+        }
+        
+        const [response,err] = await authService.setService({uuid, data})
+        // Delete loading message
+        await ctx.api.deleteMessage(ctx.chat.id, loadingMessage.message_id)
+    
+        if(err){
+            console.log(err);
+            await ctx.reply('⚠️ '+ err?.message)
+            await uploadImageConversation(conversation, ctx)
+            return
+        }
+        
+        if(!response?.data?.add){
+            await ctx.reply('⚠️ '+ response.message)
+            await mainConversation(conversation, ctx)
+            return
+        }
+    
+        await ctx.reply(ctx.t('uploadSuccess'), {parse_mode:"HTML"})
         await mainConversation(conversation, ctx)
-        return
+
+    }catch(error){
+        console.log(error);
+        
     }
 
-    if(err){
-        console.log(err);
-        await ctx.reply(ctx.t('uploadError'), {parse_mode:"HTML"})
-        await mainConversation(conversation, ctx)
-        return
-    }
-
-    await ctx.reply(ctx.t('uploadSuccess'), {parse_mode:"HTML"})
-    await mainConversation(conversation, ctx)
+  
 
 
 }
@@ -426,7 +450,6 @@ export async function verifiedTrunstileImageConversation(conversation, ctx){
     const [response,err] = await authService.getServices({uuid, params:{service}})
     // Delete loading message
     await ctx.api.deleteMessage(ctx.chat.id, loadingMessage.message_id)
-    
     if (err) {
         console.log("Error:", err);
         await ctx.reply(ctx.t('errorOccurred'));
@@ -438,7 +461,7 @@ export async function verifiedTrunstileImageConversation(conversation, ctx){
             await ctx.replyWithPhoto(response.data, {
                 caption: ctx.t('turniketVerifiedImageCaption')
             })
-            await mainConversation(conversation, ctx)
+            await turniketConversation(conversation, ctx)
             return
         } catch (photoError) {
             console.log("Photo send error:", photoError);
@@ -447,7 +470,7 @@ export async function verifiedTrunstileImageConversation(conversation, ctx){
     } else {
         console.log("Response:", response);
         await ctx.reply(ctx.t('noVerifiedImage'));
-        await  myServiceConversation(conversation, ctx)
+        await  turniketConversation(conversation, ctx)
         return
     }
 }
@@ -457,10 +480,10 @@ export async function processTrunstileImageConversation(conversation, ctx){
     const service = conversation.session.session_db.selectedServiceKey
     const uuid = conversation.session.session_db.uuid
     const [response,err] = await authService.getServices({uuid, params:{service}})
-    console.log(response);
     
     // Delete loading message
     await ctx.api.deleteMessage(ctx.chat.id, loadingMessage.message_id)
+    console.log(response.data);
     
     if (err) {
         console.log("Error:", err);
@@ -468,12 +491,12 @@ export async function processTrunstileImageConversation(conversation, ctx){
         return;
     }
     
-    if (response && response.data) {
+    if (response && response?.data?.photo) {
         try {
-            await ctx.replyWithPhoto(response.data, {
-                caption: ctx.t('processImageCaption')
+            await ctx.replyWithPhoto(response.data?.photo, {
+                caption: ctx.t('processImageCaption', {n:response.data.comment || ' '})
             })
-            await mainConversation(conversation, ctx)
+            await turniketConversation(conversation, ctx)
             return
         } catch (photoError) {
             console.log("Photo send error:", photoError);
@@ -482,7 +505,7 @@ export async function processTrunstileImageConversation(conversation, ctx){
     } else {
         console.log("Response:", response);
         await ctx.reply(ctx.t('noProcessImage'))
-        await  myServiceConversation(conversation, ctx)
+        await  turniketConversation(conversation, ctx)
         return
     }
 }
@@ -592,10 +615,88 @@ export async function turniketConversation(conversation, ctx){
     }else if(key===myServiceList[4].key){
         await processTrunstileImageConversation(conversation, ctx)
         return
+    }else if(key===myServiceList[5].key){
+        await getTodayEvents(ctx, conversation)
+        await selectDateConversation(conversation, ctx)
+        return
     }
 
     // Fallback to main
     await mainConversation(conversation, ctx)
+}
+
+export async function selectDateConversation(conversation, ctx){
+    await ctx.reply(ctx.t('selectDateText'), {
+        parse_mode:"HTML",
+        reply_markup:Keyboards.cancelOperationKeyboard(ctx.t)
+    })
+
+    function validateDateFormat(dateString) {
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+        if (!dateRegex.test(dateString)) {
+            return false
+        }
+        
+        const date = new Date(dateString)
+        const year = parseInt(dateString.substring(0, 4))
+        const month = parseInt(dateString.substring(5, 7))
+        const day = parseInt(dateString.substring(8, 10))
+        
+        return date.getFullYear() === year && 
+               date.getMonth() === month - 1 && 
+               date.getDate() === day
+    }
+
+    do {
+        ctx = await conversation.wait()
+        
+        if (ctx.message?.text === ctx.t('cancelOperation')) {
+            await mainConversation(conversation, ctx)
+            return
+        }
+        
+        if (!validateDateFormat(ctx.message?.text)) {
+            await ctx.reply(ctx.t('invalidDateFormat'), {
+                parse_mode:"HTML",
+                reply_markup:Keyboards.cancelOperationKeyboard(ctx.t)
+            })
+        }
+    } while (!validateDateFormat(ctx.message?.text))
+
+    // Store the selected date in session
+    const date = ctx.message.text
+
+    const service = conversation.session.session_db.selectedServiceKey || '708f8b59a77f3ec5c5f936a514513ece'
+    const uuid = conversation.session.session_db.uuid
+
+    const [response,err] = await authService.getServices({uuid, params:{service, date}})
+
+    if(response.data.length === 0){
+        await ctx.reply(ctx.t('noData'), {parse_mode: "HTML"})
+        await selectDateConversation(conversation, ctx)
+        return
+    }
+
+    const data = response.data
+    await ctx.reply(getMarkdownMsgEvent(data,ctx.t,1), {
+        parse_mode: "MarkdownV2",
+        reply_markup:getPaginationEventKeyboard(data,1,ctx.t)
+    })
+    await mainConversation(conversation, ctx)
+
+}
+
+const getTodayEvents = async(ctx, conversation)=>{
+    const serviceKey = '708f8b59a77f3ec5c5f936a514513ece'
+    const uuid = conversation.session.session_db.uuid
+    const [response,err] = await authService.getServices({uuid, params:{service:serviceKey}})
+    const data = response.data
+    console.log(response.data);
+    
+    await ctx.reply(getMarkdownMsgEvent(data,ctx.t,1), {
+        parse_mode: "MarkdownV2",
+        
+    })
 }
 
 

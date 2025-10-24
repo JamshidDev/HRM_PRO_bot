@@ -30,10 +30,33 @@ ${t('currentPage', {n:page})}
     return msgMarkdown2
 }
 
+const getMarkdownMsgEvent = (data,t, page=1)=>{
+    const totalItems = data.length
+    const start = (page-1) * pageSize
+    const end = start + pageSize
+    const pageItems = data.map((v, index)=>({...v,number:index+1 })).slice(start, end)
+    let msgMarkdown2 =t('eventStatus')+`\n`
+    for (const item of pageItems) {
+        msgMarkdown2 += `\n> ${item.number}\\. ${item?.direction? '🔹' :'🔸'} ${escapeMarkdownV2(item.event_date)}\\ ${escapeMarkdownV2(item.event_time)}`
+    }
+    msgMarkdown2 += `
+\n\n ${t('totalEvent', {n:totalItems})}
+${t('currentPage', {n:page})}
+`
+
+    return msgMarkdown2
+}
+
 const getPaginationKeyboard = (data,page=1,t)=>{
     const keyboard = new InlineKeyboard()
     if (page > 1) keyboard.text(t('preview'), `page:${page - 1}`)
     if (page* pageSize < data.length) keyboard.text(t('next'), `page:${page + 1}`)
+    return keyboard
+}
+const getPaginationEventKeyboard = (data,page=1,t)=>{
+    const keyboard = new InlineKeyboard()
+    if (page > 1) keyboard.text(t('preview'), `event:${page - 1}`)
+    if (page* pageSize < data.length) keyboard.text(t('next'), `event:${page + 1}`)
     return keyboard
 }
 
@@ -56,4 +79,4 @@ const initialCronJob = (bot)=>{
     })
 }
 
-export {getMarkdownMsg, getPaginationKeyboard, noteLogger, initialCronJob}
+export {getMarkdownMsg, getPaginationKeyboard, noteLogger, initialCronJob, getMarkdownMsgEvent, getPaginationEventKeyboard}
