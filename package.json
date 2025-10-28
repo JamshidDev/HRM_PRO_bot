@@ -15,6 +15,7 @@
     "@grammyjs/conversations": "^1.1.2",
     "@grammyjs/i18n": "^1.1.2",
     "@grammyjs/parse-mode": "^2.2.0",
+    "axios": "^1.13.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^4.21.2",
@@ -22,6 +23,7 @@
     "mongoose": "^8.17.1",
     "node-cron": "^4.2.1",
     "numeral": "^2.0.6",
+    "sharp": "^0.34.4",
     "winston": "^3.17.0"
   }
 }

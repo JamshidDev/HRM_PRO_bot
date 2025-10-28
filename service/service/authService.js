@@ -124,6 +124,7 @@ const getProfile =async (payload)=>{
 
 
 
+
 export const authService = {
     checkUserInfo,
     checkRegisterUser,

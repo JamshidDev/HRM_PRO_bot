@@ -4,7 +4,7 @@ import {Keyboard} from "grammy"
 import numeral from "numeral"
 import {getMarkdownMsg,getMarkdownMsgEvent, getPaginationKeyboard, getPaginationEventKeyboard} from "../utils/helper.js"
 import {initialBroadcastMsg} from "../workers/workerOne.js"
-
+import axios from "axios"
 
 function escapeMarkdownV2(text) {
     return text?.toString().replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, "\\$&")
@@ -343,100 +343,93 @@ export async function adminMsgConversation(conversation, ctx){
 }
 
 export async function uploadImageConversation(conversation, ctx){
-    try{
+    await ctx.reply(ctx.t('uploadImage'), {
+        parse_mode: "HTML",
+        reply_markup:Keyboards.cancelOperationKeyboard(ctx.t)
+    })
 
+    function getImageFileId(message) {
+        if(!message?.photo) return null
+        const lastPhoto = message?.photo?.at(-1)
+        const fileSizeMB = (lastPhoto.file_size ?? 0) / (1024 * 1024)
+        return fileSizeMB<20? lastPhoto.file_id : null
 
-        await ctx.reply(ctx.t('uploadImage'), {
-            parse_mode: "HTML",
-          reply_markup:Keyboards.cancelOperationKeyboard(ctx.t)
-      })
-    
-        function getImageFileId(message) {
-            if(!message?.photo) return null
-            const lastPhoto = message?.photo?.at(-1)
-            const fileSizeMB = (lastPhoto.file_size ?? 0) / (1024 * 1024)
-            return fileSizeMB<20? lastPhoto.file_id : null
-            
-        }
-    
-        do {
-            ctx = await conversation.wait()
-            if (!getImageFileId(ctx?.message)) {
-                await ctx.reply(ctx.t('invalidImageUpload'), {
-                    parse_mode: "HTML",
-                    reply_markup: Keyboards.cancelOperationKeyboard(ctx.t)
-                })
-            }
-        } while (!getImageFileId(ctx?.message))
-    
-        const fileId = getImageFileId(ctx.message)
-        
-        const file = await ctx.api.getFile(fileId)
-        
-        const fullLink = `https://api.telegram.org/file/bot${ctx.api.token}/${file.file_path}`
-    
-        await ctx.reply(ctx.t('confirmPicture'), {
-            parse_mode: "HTML",
-            reply_markup: Keyboards.yesOrNoKeyboard(ctx.t)
-        })
-    
-        function validateAnswer(text){
-            return [ctx.t('yes'), ctx.t('no')].includes(text)
-        }
-    
-        ctx = await conversation.wait()
-    
-        if (!validateAnswer(ctx.message?.text)) {
-            do {
-                await ctx.reply(ctx.t('invalidShortAnswer'), {
-                    parse_mode: "HTML",
-                    reply_markup: Keyboards.yesOrNoKeyboard(ctx.t)
-                })
-                ctx = await conversation.wait()
-            } while (!validateAnswer(ctx.message?.text))
-        }
-    
-        if (ctx.message.text === ctx.t('no')) {
-            await uploadImageConversation(conversation, ctx)
-            return
-        }
-    
-        const serviceKey = conversation.session.session_db.selectedServiceKey
-        const uuid = conversation.session.session_db.uuid
-    
-        // Send loading message
-        const loadingMessage = await ctx.reply("Kuting...")
-    
-        const data = {
-            url: fullLink,
-            service:serviceKey,
-    
-        }
-        
-        const [response,err] = await authService.setService({uuid, data})
-        // Delete loading message
-        await ctx.api.deleteMessage(ctx.chat.id, loadingMessage.message_id)
-    
-        if(err){
-            console.log(err);
-            await ctx.reply('⚠️ '+ err?.message)
-            await uploadImageConversation(conversation, ctx)
-            return
-        }
-        
-        if(!response?.data?.add){
-            await ctx.reply('⚠️ '+ response.message)
-            await mainConversation(conversation, ctx)
-            return
-        }
-    
-        await ctx.reply(ctx.t('uploadSuccess'), {parse_mode:"HTML"})
-        await mainConversation(conversation, ctx)
-
-    }catch(error){
-        console.log(error);
-        
     }
+
+
+    ctx = await conversation.wait()
+    if (!getImageFileId(ctx.message)) {
+        do {
+            await ctx.reply(ctx.t('invalidImageUpload'), {
+                parse_mode: "HTML",
+                reply_markup: Keyboards.cancelOperationKeyboard(ctx.t)
+            })
+            ctx = await conversation.wait()
+        } while (!getImageFileId(ctx.message))
+    }
+
+    const fileId = getImageFileId(ctx.message)
+
+    const file = await ctx.api.getFile(fileId)
+
+    const fullLink = `https://api.telegram.org/file/bot${ctx.api.token}/${file.file_path}`
+
+    await ctx.reply(ctx.t('confirmPicture'), {
+        parse_mode: "HTML",
+        reply_markup: Keyboards.yesOrNoKeyboard(ctx.t)
+    })
+
+    function validateAnswer(text){
+        return [ctx.t('yes'), ctx.t('no')].includes(text)
+    }
+
+    ctx = await conversation.wait()
+
+    if (!validateAnswer(ctx.message?.text)) {
+        do {
+            await ctx.reply(ctx.t('invalidShortAnswer'), {
+                parse_mode: "HTML",
+                reply_markup: Keyboards.yesOrNoKeyboard(ctx.t)
+            })
+            ctx = await conversation.wait()
+        } while (!validateAnswer(ctx.message?.text))
+    }
+
+    if (ctx.message.text === ctx.t('no')) {
+        await uploadImageConversation(conversation, ctx)
+        return
+    }
+
+    const serviceKey = conversation.session.session_db.selectedServiceKey
+    const uuid = conversation.session.session_db.uuid
+
+    const loadingMessage = await ctx.reply("Kuting...")
+
+    const data = {
+        url: fullLink,
+        service:serviceKey,
+
+    }
+
+    const [response,err] = await authService.setService({uuid, data})
+    // Delete loading message
+    await ctx.api.deleteMessage(ctx.chat.id, loadingMessage.message_id)
+
+    if(err){
+        console.log(err);
+        await ctx.reply('⚠️ '+ err?.message)
+        await uploadImageConversation(conversation, ctx)
+        return
+    }
+
+    if(!response?.data?.add){
+        await ctx.reply('⚠️ '+ response.message)
+        await mainConversation(conversation, ctx)
+        return
+    }
+
+    await ctx.reply(ctx.t('uploadSuccess'), {parse_mode:"HTML"})
+    await mainConversation(conversation, ctx)
 
   
 

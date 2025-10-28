@@ -15,11 +15,15 @@ export function escapeMarkdownV2(text) {
 
 export function escapeHTML(text) {
     return text
-      ?.toString()
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
+        ?.toString()
+        // 1️⃣ yashirin belgilarni o‘chirish
+        .replace(/[\u200B-\u200F\u202A-\u202E\u2066-\u2069]/g, '')
+        // 2️⃣ HTML escapelash
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .trim();
   }
 
 const getMarkdownMsg = (data,t, page=1)=>{
