@@ -1,6 +1,6 @@
 import axios from 'axios'
 import dotenv from "dotenv"
-dotenv.config()
+dotenv.config({quiet: true})
 const apiUrl = process.env.SERVICE_URL
 const TOKEN = process.env.API_TOKEN
 

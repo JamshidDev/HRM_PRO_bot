@@ -13,7 +13,7 @@ import {a} from "@grammyjs/parse-mode"
 // 0 - all users
 // 1 - birthday users
 
-dotenv.config()
+dotenv.config({quiet: true})
 
 const TOKEN = process.env.BOT_TOKEN
 const notificationId = process.env.NOTIFICATION_ID

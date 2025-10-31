@@ -8,7 +8,7 @@ import {stopAllWorkers} from "./workers/workerOne.js"
 import cron from "node-cron"
 import {noteLogger, initialCronJob} from "./utils/helper.js"
 
-dotenv.config()
+dotenv.config({quiet: true})
 
 const PORT = process.env.PORT || 3000
 const BASE_URL = process.env.BASE_URL
@@ -32,6 +32,13 @@ bot.use(broadcastComposer)
 
 bot.command('start', async (ctx) => {
     await ctx.reply('Hello!')
+})
+
+bot.command('video', async (ctx)=>{
+    const url = new URL('https://www.instagram.com/stories/jaloliddin_mashariipov/3754106076930045612?utm_source=ig_story_item_share&igsh=ejgydjUzZDZ1MnJv')
+    url.host = 'kkinstagram.com'
+    console.log(url)
+    await ctx.replyWithVideo(url.toString())
 })
 
 // initialCronJob(bot)

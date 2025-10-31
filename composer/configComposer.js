@@ -6,7 +6,7 @@ import {registerConversations} from "../conversations/index.js"
 import {authService} from "../service/service/index.js"
 import dotenv from "dotenv"
 
-dotenv.config()
+dotenv.config({quiet: true})
 const adapter = new MemorySessionStorage()
 const bot = new Composer()
 const notificationId = process.env.NOTIFICATION_ID

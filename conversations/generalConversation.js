@@ -2,7 +2,14 @@ import Keyboards from "../keyboards/index.js"
 import {authService} from "../service/service/index.js"
 import {Keyboard} from "grammy"
 import numeral from "numeral"
-import {getMarkdownMsg,getMarkdownMsgEvent, getPaginationKeyboard, getPaginationEventKeyboard} from "../utils/helper.js"
+import {
+    getMarkdownMsg,
+    getMarkdownMsgEvent,
+    getPaginationKeyboard,
+    getPaginationEventKeyboard,
+    getMarkdownMsgMed,
+    getPaginationMedKeyboard,
+} from "../utils/helper.js"
 import {initialBroadcastMsg} from "../workers/workerOne.js"
 import axios from "axios"
 
@@ -25,7 +32,6 @@ const myServiceList = [
         key:'8514a7291109c3bbbdbafb909070e8b9',
         visible:true, 
     },
-
     {
         name:"service_79e650e47ee425c12099c46d555be0be",
         key:'79e650e47ee425c12099c46d555be0be',
@@ -45,7 +51,17 @@ const myServiceList = [
         name:"service_708f8b59a77f3ec5c5f936a514513ece",
         key:'708f8b59a77f3ec5c5f936a514513ece',
         visible:false, 
-    }
+    },
+    {
+        name:"service_c5636e99119f742564023ff52399d721",
+        key:'c5636e99119f742564023ff52399d721',
+        visible:true,
+    },
+    {
+        name:"service_e2fcd659adbeb4c87d58ab8c1f23ff03",
+        key:'e2fcd659adbeb4c87d58ab8c1f23ff03',
+        visible:true,
+    },
 ]
 
 const monthList = [
@@ -168,18 +184,25 @@ export async function myServiceConversation(conversation, ctx){
     if(key===myServiceList[1].key){
         await mySalaryConversation(conversation, ctx)
         return
-    }else if(key===myServiceList[2].key){
+    }
+    else if(key===myServiceList[2].key){
         await uploadImageConversation(conversation, ctx)
         return
-    }else if(key===myServiceList[3].key){
+    }
+    else if(key===myServiceList[3].key){
         await verifiedTrunstileImageConversation(conversation, ctx)
         return
-    }else if(key===myServiceList[4].key){
+    }
+    else if(key===myServiceList[4].key){
         await processTrunstileImageConversation(conversation, ctx)
         return
     }
     else if(key===myServiceList[5].key){
         await selectDateConversation(conversation, ctx)
+        return
+    }
+    else if(key===myServiceList[6].key){
+        await getMedConversation(conversation, ctx)
         return
     }
 
@@ -602,13 +625,16 @@ export async function turniketConversation(conversation, ctx){
     if(key===myServiceList[2].key){
         await uploadImageConversation(conversation, ctx)
         return
-    }else if(key===myServiceList[3].key){
+    }
+    else if(key===myServiceList[3].key){
         await verifiedTrunstileImageConversation(conversation, ctx)
         return
-    }else if(key===myServiceList[4].key){
+    }
+    else if(key===myServiceList[4].key){
         await processTrunstileImageConversation(conversation, ctx)
         return
-    }else if(key===myServiceList[5].key){
+    }
+    else if(key===myServiceList[5].key){
         await getTodayEvents(ctx, conversation)
         await selectDateConversation(conversation, ctx)
         return
@@ -677,6 +703,26 @@ export async function selectDateConversation(conversation, ctx){
     })
     await mainConversation(conversation, ctx)
 
+}
+
+async function getMedConversation(conversation, ctx){
+    const service = conversation.session.session_db.selectedServiceKey || '708f8b59a77f3ec5c5f936a514513ece'
+    const uuid = conversation.session.session_db.uuid
+
+    const [response,_] = await authService.getServices({uuid, params:{service}})
+
+    if(response.data.length ===0){
+        await ctx.reply(ctx.t('noData'), {parse_mode: "HTML"})
+        await mainConversation(conversation, ctx)
+        return
+    }
+    const data = response.data
+
+    await ctx.reply(getMarkdownMsgMed(data,ctx.t,1), {
+        parse_mode: "MarkdownV2",
+        reply_markup:getPaginationMedKeyboard(data,1,ctx.t)
+    })
+    await mainConversation(conversation, ctx)
 }
 
 const getTodayEvents = async(ctx, conversation)=>{
