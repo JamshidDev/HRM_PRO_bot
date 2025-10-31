@@ -57,11 +57,11 @@ const myServiceList = [
         key:'c5636e99119f742564023ff52399d721',
         visible:true,
     },
-    {
-        name:"service_e2fcd659adbeb4c87d58ab8c1f23ff03",
-        key:'e2fcd659adbeb4c87d58ab8c1f23ff03',
-        visible:true,
-    },
+    // {
+    //     name:"service_e2fcd659adbeb4c87d58ab8c1f23ff03",
+    //     key:'e2fcd659adbeb4c87d58ab8c1f23ff03',
+    //     visible:true,
+    // },
 ]
 
 const monthList = [
