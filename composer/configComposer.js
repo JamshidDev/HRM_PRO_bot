@@ -26,6 +26,7 @@ bot.use(session({
                 isLogOut:false,
                 isAuth:false,
                 uuid:null,
+                selectedDate:null
             }
         },
         storage: new MemorySessionStorage(),

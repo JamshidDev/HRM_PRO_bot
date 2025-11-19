@@ -50,7 +50,7 @@ const getMarkdownMsgEvent = (data,t, page=1)=>{
     const pageItems = data.map((v, index)=>({...v,number:index+1 })).slice(start, end)
     let msgMarkdown2 =t('eventStatus')+`\n`
     for (const item of pageItems) {
-        msgMarkdown2 += `\n> ${item.number}\\. ${item?.direction? '🔹' :'🔸'} ${escapeMarkdownV2(item.event_date)}\\ ${escapeMarkdownV2(item.event_time)}`
+        msgMarkdown2 += `\n> ${item.number}\\. ${item?.direction? '🔹' :'🔸'} ${escapeMarkdownV2(item.event_date)}\\ ${escapeMarkdownV2(item.event_time)} *${escapeMarkdownV2(item.device)}*`
     }
     msgMarkdown2 += `
 \n\n ${t('totalEvent', {n:totalItems})}

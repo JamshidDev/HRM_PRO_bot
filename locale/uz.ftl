@@ -198,6 +198,17 @@ medContent => {$number} \.
     >*Sanagacha*: {$to}
     >*Holati*: {$status}
 
+salaryAlertMessage =
+    <b>Hurmatli xodim!</b>
+
+    <i>Ushbu bo‘limda ko‘rsatilayotgan oylik ma’lumotlari bazaga tashkilot tomonidan yuklangan ma’lumotlar asosida shakllantiriladi. Agarda ko‘rsatilgan summada xatolik yoki nomuvofiqlik sezsangiz, iltimos, bu ma’lumotni yakuniy va rasmiy hujjat sifatida qabul qilmang.</i>
+
+    <i>Aniqlik kiritish va tasdiqlangan ma’lumotni olish uchun buxgalteriya yoki kadrlar bo‘limiga murojaat qilishingiz so‘raladi.</i>
+
+    🗒 <b>Eslatma:</b> <i> Siz ko‘rayotgan ma’lumotlar texnik xatoliklar, noto‘g‘ri yuklangan fayl yoki tizimdagi o‘zgarishlar sababli vaqtinchalik noto‘g‘ri bo‘lishi mumkin. Rasmiy hisob-kitob faqat buxgalteriya tomonidan tasdiqlangan ma’lumotlar asosida amalga oshiriladi.</i>
+
+    <i>Tushunishingiz uchun rahmat!</i>
+
 
 
 

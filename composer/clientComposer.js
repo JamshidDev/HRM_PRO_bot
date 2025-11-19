@@ -85,11 +85,20 @@ bot.filter(ctx=>ctx.config.isAuth).on("callback_query:data", async ctx => {
     const data = ctx.callbackQuery.data
     const key = data.split(":")[0]
 
+    await ctx.answerCallbackQuery(
+
+        {
+            text:'Hurmatli xodim!\n\nUshbu bo\'limda ko\'rsatilayotgan oyli',
+            show_alert: true
+        }
+    );
+
     if(!data.toString().includes(':')) return
 
     const page = Number(data.split(":")[1])
     const serviceKey =serviceKeys[key]
-    const [response2] = await authService.getServices({ params:{ service:serviceKey }, uuid })
+    const date = key==='event'? ctx.session.session_db.selectedDate : undefined
+    const [response2] = await authService.getServices({ params:{ service:serviceKey, date}, uuid })
     const dataList = response2.data
 
     const keyboardBtn = getKeyboard(key, {data:dataList, t:ctx.t, page})
@@ -121,9 +130,9 @@ bot.filter(ctx=>ctx.config.isAuth).filter(hears("SupportBtn"), async (ctx) => {
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("ProfileBtn"), async (ctx) => {
     const uuid = ctx.session.session_db.uuid
     const loadingMessage = await ctx.reply(ctx.t('loading'), {parse_mode:"HTML"})
-    const [resposne, error] = await authService.getProfile({uuid})
+    const [response, error] = await authService.getProfile({uuid})
     await ctx.api.deleteMessage(ctx.chat.id, loadingMessage.message_id)
-    const data = resposne?.data
+    const data = response?.data
     const fullName = data?.last_name +' '+ data?.first_name+' '+ data?.middle_name
     const organizationName = data?.positions[0]?.organization
     const positionName = data?.positions[0]?.position

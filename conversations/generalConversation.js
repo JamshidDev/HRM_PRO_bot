@@ -318,6 +318,10 @@ export async function mySalaryConversation(conversation, ctx){
         const [salaryResponse,err] = await authService.getServices({params:{service:salaryKey,year:selectedYear,month:selectedMonth}, uuid})
         await ctx.api.deleteMessage(ctx.chat.id, loadingMsg.message_id)
         await sendSalaryData(salaryResponse.salary, ctx)
+
+        await ctx.reply(ctx.t('salaryAlertMessage'), {
+            parse_mode:"HTML"
+        });
     }
 
 
@@ -684,6 +688,7 @@ export async function selectDateConversation(conversation, ctx){
 
     // Store the selected date in session
     const date = ctx.message.text
+    conversation.session.session_db.selectedDate = date
 
     const service = conversation.session.session_db.selectedServiceKey || '708f8b59a77f3ec5c5f936a514513ece'
     const uuid = conversation.session.session_db.uuid
@@ -730,7 +735,7 @@ const getTodayEvents = async(ctx, conversation)=>{
     const uuid = conversation.session.session_db.uuid
     const [response,err] = await authService.getServices({uuid, params:{service:serviceKey}})
     const data = response.data
-    console.log(response.data);
+    console.log(data)
     
     await ctx.reply(getMarkdownMsgEvent(data,ctx.t,1), {
         parse_mode: "MarkdownV2",
