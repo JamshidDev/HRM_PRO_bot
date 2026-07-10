@@ -163,7 +163,15 @@ salaryAlertMessage =
 
     <i>Tushunishingiz uchun rahmat!</i>
 
+otpCode = 🔐 Tasdiqlash kodingiz: <code>{$code}</code>
 
+    <i>Kod 3 daqiqa amal qiladi.</i>
+
+otpResendBtn = 🔄 Yangi kod olish
+
+otpStillValid = ⏳ Joriy kod hali amal qiladi. {$n} soniyadan keyin qayta urinib ko'ring.
+
+otpError = ⚠️ Kodni olishda xatolik yuz berdi. Qaytadan urinib ko'ring.
 
 
 

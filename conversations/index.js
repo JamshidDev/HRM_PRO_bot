@@ -1,5 +1,6 @@
 import { createConversation } from "@grammyjs/conversations"
 import {registerConversation} from "./registerConversation.js"
+import {otpConversation} from "./otpConversation.js"
 import {
     mainConversation,
     myServiceConversation,
@@ -18,5 +19,6 @@ export function registerConversations(composer) {
     composer.use(createConversation(adminMsgConversation))
     composer.use(createConversation(turniketConversation))
     composer.use(createConversation(selectDateConversation))
+    composer.use(createConversation(otpConversation))
 
 }

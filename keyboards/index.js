@@ -1,4 +1,4 @@
-import {Keyboard} from "grammy"
+import {Keyboard, InlineKeyboard} from "grammy"
 
 const mainKeyboard =(ctx)=>{
     const keyboard = new Keyboard()
@@ -58,6 +58,10 @@ const yesOrNoKeyboard = (t)=>{
         .resized()
 }
 
+const otpResendKeyboard = (t)=>{
+    return new InlineKeyboard().text(t('otpResendBtn'), 'otp_resend')
+}
+
 
 export default  {
     mainKeyboard,
@@ -66,4 +70,5 @@ export default  {
     yesOrNoKeyboard,
     broadcastMsgKeyboard,
     cancelOperationKeyboard,
+    otpResendKeyboard,
 }
