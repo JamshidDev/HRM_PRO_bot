@@ -8,6 +8,8 @@ const mainKeyboard =(ctx)=>{
         .text(ctx.t('TurniketBtn'))
         .text(ctx.t('logOutBtn'))
         .row()
+        .text(ctx.t('OtpMenuBtn'))
+        .row()
         .text(ctx.t('SupportBtn'))
         .row()
     if(ctx.config.isAdmin){
@@ -58,8 +60,10 @@ const yesOrNoKeyboard = (t)=>{
         .resized()
 }
 
-const otpResendKeyboard = (t)=>{
-    return new InlineKeyboard().text(t('otpResendBtn'), 'otp_resend')
+const otpKeyboard = (t, code)=>{
+    return new InlineKeyboard()
+        .copyText(t('otpCopyBtn'), code)
+        .text(t('otpResendBtn'), 'otp_resend')
 }
 
 
@@ -70,5 +74,5 @@ export default  {
     yesOrNoKeyboard,
     broadcastMsgKeyboard,
     cancelOperationKeyboard,
-    otpResendKeyboard,
+    otpKeyboard,
 }

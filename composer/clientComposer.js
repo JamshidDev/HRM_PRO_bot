@@ -58,7 +58,7 @@ bot.callbackQuery('otp_resend', async (ctx) => {
     ctx.session.session_db.otpExpiresAt = result.expiresAt
     await ctx.editMessageText(ctx.t('otpCode', {code: result.code}), {
         parse_mode:"HTML",
-        reply_markup: Keyboards.otpResendKeyboard(ctx.t),
+        reply_markup: Keyboards.otpKeyboard(ctx.t, result.code),
     })
 })
 
@@ -191,6 +191,14 @@ bot.filter(ctx=>ctx.config.isAuth).filter(hears("ProfileBtn"), async (ctx) => {
 
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("TurniketBtn"), async (ctx) => {
     await ctx.conversation.enter("turniketConversation")
+});
+
+bot.filter(ctx=>ctx.config.isAuth).filter(hears("OtpMenuBtn"), async (ctx) => {
+    if (!ctx.session.session_db.otpPlatform) {
+        ctx.session.session_db.otpPlatform = 'bot'
+        ctx.session.session_db.otpToken = null
+    }
+    await ctx.conversation.enter("otpConversation")
 });
 
 

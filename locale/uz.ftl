@@ -173,6 +173,10 @@ otpStillValid = ⏳ Joriy kod hali amal qiladi. {$n} soniyadan keyin qayta urini
 
 otpError = ⚠️ Kodni olishda xatolik yuz berdi. Qaytadan urinib ko'ring.
 
+OtpMenuBtn = 🔑 Kod olish
+
+otpCopyBtn = 📋 Kodni nusxalash
+
 
 
 

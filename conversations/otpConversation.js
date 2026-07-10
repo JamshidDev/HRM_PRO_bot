@@ -19,6 +19,6 @@ export async function otpConversation(conversation, ctx){
     conversation.session.session_db.otpExpiresAt = result.expiresAt
     await ctx.reply(ctx.t('otpCode', {code: result.code}), {
         parse_mode:"HTML",
-        reply_markup: Keyboards.otpResendKeyboard(ctx.t),
+        reply_markup: Keyboards.otpKeyboard(ctx.t, result.code),
     })
 }
