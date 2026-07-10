@@ -58,19 +58,6 @@ const yesOrNoKeyboard = (t)=>{
         .resized()
 }
 
-const turniketKeyboard = (t)=>{
-    return new Keyboard()
-        .text(t('verifiedImageBtn'))
-        .row()
-        .text(t('processImageBtn'))
-        .row()
-        .text(t('backToMainMenu'))
-        .resized()
-}
-
-
-
-
 
 export default  {
     mainKeyboard,
@@ -79,5 +66,4 @@ export default  {
     yesOrNoKeyboard,
     broadcastMsgKeyboard,
     cancelOperationKeyboard,
-    turniketKeyboard,
 }

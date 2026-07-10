@@ -93,19 +93,6 @@ const detachUsers =async (payload)=>{
 
 }
 
-const setService =async (payload)=>{
-    try{
-        const {data} =  await axios.post(`/v1/telegram/menu/set-service`, payload?.data, {
-            headers: payload?.uuid
-                ? { "Uuid": payload.uuid }
-                : undefined})
-        return [data, null]
-    }catch (err){
-        return [null, err.response?.data || err.message]
-    }
-
-}
-
 const getProfile =async (payload)=>{
     try{
         const {data} =  await axios.get(`/v1/telegram/profile`, {
@@ -135,6 +122,5 @@ export const authService = {
     loginSystem,
     getUsers,
     detachUsers,
-    setService,
     getProfile,
 }
