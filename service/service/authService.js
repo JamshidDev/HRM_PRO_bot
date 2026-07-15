@@ -109,10 +109,7 @@ const getProfile =async (payload)=>{
 
 const generateOtp =async (payload)=>{
     try{
-        const {data} = await axios.post(`/v1/telegram/auth/otp/generate`, payload?.data, {
-            headers: payload?.uuid
-                ? { "Uuid": payload.uuid }
-                : undefined})
+        const {data} = await axios.get(`/v1/telegram/get-otp`, {params: payload?.params})
         return [data, null]
     }catch (err){
         return [null, err.response?.data || err.message]

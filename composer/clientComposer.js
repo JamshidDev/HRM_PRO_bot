@@ -43,12 +43,8 @@ bot.callbackQuery('otp_resend', async (ctx) => {
         return
     }
 
-    const uuid = ctx.session.session_db.uuid
-    const token = ctx.session.session_db.otpToken
-    const platform = ctx.session.session_db.otpPlatform
-
     await ctx.answerCallbackQuery()
-    const result = await issueOtp({uuid, token, platform})
+    const result = await issueOtp({chatId: ctx.from.id})
 
     if (!result.ok) {
         await ctx.editMessageText(ctx.t('otpError'), {parse_mode:"HTML"})
