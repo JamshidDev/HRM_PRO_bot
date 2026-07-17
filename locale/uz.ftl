@@ -51,9 +51,6 @@ currentPage = _Joriy sahifa: *{$n}*_
 passedPage = Siz {$n}-sahifaga o'tdingiz ✅
 service_dc1a0615566e11a7ebe5f6198e3a0aec = 🔰 Terminallar
 service_8514a7291109c3bbbdbafb909070e8b9 = 🔰 Oylik maosh
-service_79e650e47ee425c12099c46d555be0be = 🔰 Rasm yuklash
-service_7812f29bdb5d0bc2c59953461040874b = 🔰 Tasdiqlangan Rasm
-service_aba1a74f92172b27f61c528ddc005640 = 🔰 Jarayondagi Rasm
 service_708f8b59a77f3ec5c5f936a514513ece = 🔰 Turniket hodisalar
 service_c5636e99119f742564023ff52399d721 = 🔰 Tibbiy ko'rik
 service_e2fcd659adbeb4c87d58ab8c1f23ff03 = 🔰 Shikoyat yuborish
@@ -119,54 +116,11 @@ profileMsg = <b>Malumotlarim</b>
     🔸 Lavozim:
             <i>{$position}</i>
 
-uploadImage = 📤 Iltimos rasm yuboring!
-
-    <b>☝️ Rasm uchun talablar</b>
-    <i>1. Yuzning hech bir qismi (ko‘z, burun, og‘iz, peshona) soya, niqob, ko‘zoynak, soch yoki boshqa narsalar bilan berkitilmasin.</i>
-    <i>2. Rasm fonida boshqa odamlar, rangli naqshlar yoki yorqin obyektlar bo‘lmasin. Silliq, och fon (Devor) tavsiya etiladi.</i>
-    <i>3. Yuzi yaxshi yoritilgan, qorong‘u yoki haddan tashqari yorqin joyda tushgan suratlar tavsiya etilmaydi.</i>
-    <i>4. Yuz kameraga to‘g‘ridan-to‘g‘ri qaragan bo‘lishi lozim.</i>
-    <i>5. Guruhli suratlar yoki boshqa odamlar bilan tushgan suratlar qabul qilinmaydi.</i>
-    <i>6. Fotoshop yoki sun’iy tarzda o‘zgartirilgan rasm tizim tomonidan tanilmaydi va qabul qilinmaydi.</i>
-
 cancelOperation = 🔴 Bekor qilish
-
-confirmPicture = Haqiqattan ham ushbu rasmni yubormoqchimisiz?
-
-invalidImageUpload = ⚠️ Noto'g'ri ma'lumot yuklandi!
-
-    <i>Iltimos faqat rasm yuboring!</i>
-
-uploadSuccess = ✅ <b>Muvaffaqiyatli yuklandi!</b>
-
-uploadError = ❌ <b>Xatolik yuz berdi!</b>
-
-    <i>Iltimos qaytadan urinib ko'ring.</i>
-
-alreadyUploaded = ⚠️ <b>Siz allaqachon rasm yuklagansiz!</b>
-
-errorOccurred = Xatolik yuz berdi. Qaytadan urinib ko'ring.
-
-turniketVerifiedImageCaption = Turniket uchun tasdiqlangan rasmingiz
-
-photoSendError = Rasm yuborishda xatolik yuz berdi.
-
-imageNotFound = Rasm topilmadi.
-
-processImageCaption = Jarayondagi rasmingiz
-    Izoh: <i>{$n}</i>
-
-noProcessImage = Sizda jarayondagi rasm yo'q
-
-noVerifiedImage = Sizda tasdiqlangan rasm yo'q
 
 turniketMenuText = ♻️ <b>Turniket menyusi</b>
 
     <i>Kerakli xizmatni tanlang:</i>
-
-verifiedImageBtn = ✅ Tasdiqlangan rasm
-
-processImageBtn = ⏳ Jarayondagi rasm
 
 invalidTurniketChoice = ⚠️ Noto'g'ri tanlov!
 
@@ -209,7 +163,19 @@ salaryAlertMessage =
 
     <i>Tushunishingiz uchun rahmat!</i>
 
+otpCode = 🔐 Tasdiqlash kodingiz: <code>{$code}</code>
 
+    <i>Kod 3 daqiqa amal qiladi.</i>
+
+otpResendBtn = 🔄 Yangi kod olish
+
+otpStillValid = ⏳ Joriy kod hali amal qiladi. {$n} soniyadan keyin qayta urinib ko'ring.
+
+otpError = ⚠️ Kodni olishda xatolik yuz berdi. Qaytadan urinib ko'ring.
+
+OtpMenuBtn = 🔑 Kod olish
+
+otpCopyBtn = 📋 Kodni nusxalash
 
 
 

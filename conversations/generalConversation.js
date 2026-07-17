@@ -21,40 +21,31 @@ function escapeMarkdownV2(text) {
 
 
 
+const SERVICE_KEYS = {
+    SALARY: '8514a7291109c3bbbdbafb909070e8b9',
+    TURNIKET: '708f8b59a77f3ec5c5f936a514513ece',
+    MEDICAL: 'c5636e99119f742564023ff52399d721',
+}
+
 const myServiceList = [
     {
         name:"service_dc1a0615566e11a7ebe5f6198e3a0aec",
         key:'dc1a0615566e11a7ebe5f6198e3a0aec',
-        visible:true,       
+        visible:true,
     },
     {
         name:"service_8514a7291109c3bbbdbafb909070e8b9",
-        key:'8514a7291109c3bbbdbafb909070e8b9',
-        visible:true, 
-    },
-    {
-        name:"service_79e650e47ee425c12099c46d555be0be",
-        key:'79e650e47ee425c12099c46d555be0be',
-        visible:false, 
-    },
-    {
-        name:"service_7812f29bdb5d0bc2c59953461040874b",
-        key:'7812f29bdb5d0bc2c59953461040874b',
-        visible:false, 
-    },
-    {
-        name:"service_aba1a74f92172b27f61c528ddc005640",
-        key:'aba1a74f92172b27f61c528ddc005640',
-        visible:false, 
+        key:SERVICE_KEYS.SALARY,
+        visible:true,
     },
     {
         name:"service_708f8b59a77f3ec5c5f936a514513ece",
-        key:'708f8b59a77f3ec5c5f936a514513ece',
-        visible:false, 
+        key:SERVICE_KEYS.TURNIKET,
+        visible:false,
     },
     {
         name:"service_c5636e99119f742564023ff52399d721",
-        key:'c5636e99119f742564023ff52399d721',
+        key:SERVICE_KEYS.MEDICAL,
         visible:true,
     },
     // {
@@ -181,27 +172,11 @@ export async function myServiceConversation(conversation, ctx){
     const selected = visibleServices.find(v => ctx.t(v.name) === ctx.message.text)
     const key = selected?.key
     conversation.session.session_db.selectedServiceKey = key
-    if(key===myServiceList[1].key){
+    if(key===SERVICE_KEYS.SALARY){
         await mySalaryConversation(conversation, ctx)
         return
     }
-    else if(key===myServiceList[2].key){
-        await uploadImageConversation(conversation, ctx)
-        return
-    }
-    else if(key===myServiceList[3].key){
-        await verifiedTrunstileImageConversation(conversation, ctx)
-        return
-    }
-    else if(key===myServiceList[4].key){
-        await processTrunstileImageConversation(conversation, ctx)
-        return
-    }
-    else if(key===myServiceList[5].key){
-        await selectDateConversation(conversation, ctx)
-        return
-    }
-    else if(key===myServiceList[6].key){
+    else if(key===SERVICE_KEYS.MEDICAL){
         await getMedConversation(conversation, ctx)
         return
     }
@@ -369,169 +344,6 @@ export async function adminMsgConversation(conversation, ctx){
     }
 }
 
-export async function uploadImageConversation(conversation, ctx){
-    await ctx.reply(ctx.t('uploadImage'), {
-        parse_mode: "HTML",
-        reply_markup:Keyboards.cancelOperationKeyboard(ctx.t)
-    })
-
-    function getImageFileId(message) {
-        if(!message?.photo) return null
-        const lastPhoto = message?.photo?.at(-1)
-        const fileSizeMB = (lastPhoto.file_size ?? 0) / (1024 * 1024)
-        return fileSizeMB<20? lastPhoto.file_id : null
-
-    }
-
-
-    ctx = await conversation.wait()
-    if (!getImageFileId(ctx.message)) {
-        do {
-            await ctx.reply(ctx.t('invalidImageUpload'), {
-                parse_mode: "HTML",
-                reply_markup: Keyboards.cancelOperationKeyboard(ctx.t)
-            })
-            ctx = await conversation.wait()
-        } while (!getImageFileId(ctx.message))
-    }
-
-    const fileId = getImageFileId(ctx.message)
-
-    const file = await ctx.api.getFile(fileId)
-
-    const fullLink = `https://api.telegram.org/file/bot${ctx.api.token}/${file.file_path}`
-
-    await ctx.reply(ctx.t('confirmPicture'), {
-        parse_mode: "HTML",
-        reply_markup: Keyboards.yesOrNoKeyboard(ctx.t)
-    })
-
-    function validateAnswer(text){
-        return [ctx.t('yes'), ctx.t('no')].includes(text)
-    }
-
-    ctx = await conversation.wait()
-
-    if (!validateAnswer(ctx.message?.text)) {
-        do {
-            await ctx.reply(ctx.t('invalidShortAnswer'), {
-                parse_mode: "HTML",
-                reply_markup: Keyboards.yesOrNoKeyboard(ctx.t)
-            })
-            ctx = await conversation.wait()
-        } while (!validateAnswer(ctx.message?.text))
-    }
-
-    if (ctx.message.text === ctx.t('no')) {
-        await uploadImageConversation(conversation, ctx)
-        return
-    }
-
-    const serviceKey = conversation.session.session_db.selectedServiceKey
-    const uuid = conversation.session.session_db.uuid
-
-    const loadingMessage = await ctx.reply("Kuting...")
-
-    const data = {
-        url: fullLink,
-        service:serviceKey,
-
-    }
-
-    const [response,err] = await authService.setService({uuid, data})
-    // Delete loading message
-    await ctx.api.deleteMessage(ctx.chat.id, loadingMessage.message_id)
-
-    if(err){
-        console.log(err);
-        await ctx.reply('⚠️ '+ err?.message)
-        await uploadImageConversation(conversation, ctx)
-        return
-    }
-
-    if(!response?.data?.add){
-        await ctx.reply('⚠️ '+ response.message)
-        await mainConversation(conversation, ctx)
-        return
-    }
-
-    await ctx.reply(ctx.t('uploadSuccess'), {parse_mode:"HTML"})
-    await mainConversation(conversation, ctx)
-
-  
-
-
-}
-
-export async function verifiedTrunstileImageConversation(conversation, ctx){
-    const loadingMessage = await ctx.reply(ctx.t('loading'), {parse_mode:"HTML"})
-    const service = conversation.session.session_db.selectedServiceKey
-    const uuid = conversation.session.session_db.uuid
-    const [response,err] = await authService.getServices({uuid, params:{service}})
-    // Delete loading message
-    await ctx.api.deleteMessage(ctx.chat.id, loadingMessage.message_id)
-    if (err) {
-        console.log("Error:", err);
-        await ctx.reply(ctx.t('errorOccurred'));
-        return;
-    }
-    
-    if (response && response.data) {
-        try {
-            await ctx.replyWithPhoto(response.data, {
-                caption: ctx.t('turniketVerifiedImageCaption')
-            })
-            await turniketConversation(conversation, ctx)
-            return
-        } catch (photoError) {
-            console.log("Photo send error:", photoError);
-            await ctx.reply(ctx.t('photoSendError'));
-        }
-    } else {
-        console.log("Response:", response);
-        await ctx.reply(ctx.t('noVerifiedImage'));
-        await  turniketConversation(conversation, ctx)
-        return
-    }
-}
-
-export async function processTrunstileImageConversation(conversation, ctx){
-    const loadingMessage = await ctx.reply(ctx.t('loading'), {parse_mode:"HTML"})
-    const service = conversation.session.session_db.selectedServiceKey
-    const uuid = conversation.session.session_db.uuid
-    const [response,err] = await authService.getServices({uuid, params:{service}})
-    
-    // Delete loading message
-    await ctx.api.deleteMessage(ctx.chat.id, loadingMessage.message_id)
-    console.log(response.data);
-    
-    if (err) {
-        console.log("Error:", err);
-        await ctx.reply(ctx.t('errorOccurred'));
-        return;
-    }
-    
-    if (response && response?.data?.photo) {
-        try {
-            await ctx.replyWithPhoto(response.data?.photo, {
-                caption: ctx.t('processImageCaption', {n:response.data.comment || ' '})
-            })
-            await turniketConversation(conversation, ctx)
-            return
-        } catch (photoError) {
-            console.log("Photo send error:", photoError);
-            await ctx.reply(ctx.t('photoSendError'));
-        }
-    } else {
-        console.log("Response:", response);
-        await ctx.reply(ctx.t('noProcessImage'))
-        await  turniketConversation(conversation, ctx)
-        return
-    }
-}
-
-
-
 
 
 const sendSalaryData =async (salaryData, ctx)=>{
@@ -626,19 +438,7 @@ export async function turniketConversation(conversation, ctx){
     conversation.session.session_db.selectedServiceKey = key
 
     // Route based on selected key
-    if(key===myServiceList[2].key){
-        await uploadImageConversation(conversation, ctx)
-        return
-    }
-    else if(key===myServiceList[3].key){
-        await verifiedTrunstileImageConversation(conversation, ctx)
-        return
-    }
-    else if(key===myServiceList[4].key){
-        await processTrunstileImageConversation(conversation, ctx)
-        return
-    }
-    else if(key===myServiceList[5].key){
+    if(key===SERVICE_KEYS.TURNIKET){
         await getTodayEvents(ctx, conversation)
         await selectDateConversation(conversation, ctx)
         return
@@ -690,7 +490,7 @@ export async function selectDateConversation(conversation, ctx){
     const date = ctx.message.text
     conversation.session.session_db.selectedDate = date
 
-    const service = conversation.session.session_db.selectedServiceKey || '708f8b59a77f3ec5c5f936a514513ece'
+    const service = conversation.session.session_db.selectedServiceKey || SERVICE_KEYS.TURNIKET
     const uuid = conversation.session.session_db.uuid
 
     const [response,err] = await authService.getServices({uuid, params:{service, date}})
@@ -731,7 +531,7 @@ async function getMedConversation(conversation, ctx){
 }
 
 const getTodayEvents = async(ctx, conversation)=>{
-    const serviceKey = '708f8b59a77f3ec5c5f936a514513ece'
+    const serviceKey = SERVICE_KEYS.TURNIKET
     const uuid = conversation.session.session_db.uuid
     const [response,err] = await authService.getServices({uuid, params:{service:serviceKey}})
     const data = response.data

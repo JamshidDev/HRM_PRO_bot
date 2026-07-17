@@ -4,18 +4,58 @@ import {hears}  from "@grammyjs/i18n"
 import {getMarkdownMsg,
     getPaginationKeyboard, escapeMarkdownV2, getPaginationEventKeyboard,getMarkdownMsgEvent, getPaginationMedKeyboard, getMarkdownMsgMed} from "../utils/helper.js"
 import Keyboards from "../keyboards/index.js"
+import {issueOtp} from "../utils/otp.js"
 
 const bot = new Composer().chatType('private')
 
 
 
 bot.command('start', async (ctx) => {
+    const payload = ctx.match?.trim()
+    const otpMatch = payload?.match(/^(web|mobile)-(.+)$/)
+
+    if (otpMatch) {
+        ctx.session.session_db.otpPlatform = otpMatch[1]
+        ctx.session.session_db.otpToken = otpMatch[2]
+        ctx.session.session_db.pendingOtpIntent = true
+    }
+
     if(ctx.config?.isAuth){
-        await ctx.conversation.enter("mainConversation")
+        if (otpMatch) {
+            await ctx.conversation.enter("otpConversation")
+        } else {
+            await ctx.conversation.enter("mainConversation")
+        }
     }else{
         await ctx.conversation.enter("registerConversation")
 
     }
+})
+
+bot.callbackQuery('otp_resend', async (ctx) => {
+    const expiresAt = ctx.session.session_db.otpExpiresAt
+    if (expiresAt && Date.now() < expiresAt) {
+        const remaining = Math.ceil((expiresAt - Date.now()) / 1000)
+        await ctx.answerCallbackQuery({
+            text: ctx.t('otpStillValid', {n: remaining}),
+            show_alert: true,
+        })
+        return
+    }
+
+    await ctx.answerCallbackQuery()
+    const result = await issueOtp({chatId: ctx.from.id})
+
+    if (!result.ok) {
+        await ctx.editMessageText(ctx.t('otpError'), {parse_mode:"HTML"})
+        return
+    }
+
+    ctx.session.session_db.otpExpiresAt = result.expiresAt
+    await ctx.editMessageText(ctx.t('otpCode', {code: result.code}), {
+        parse_mode:"HTML",
+        reply_markup: Keyboards.otpKeyboard(ctx.t, result.code),
+    })
 })
 
 
@@ -147,6 +187,14 @@ bot.filter(ctx=>ctx.config.isAuth).filter(hears("ProfileBtn"), async (ctx) => {
 
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("TurniketBtn"), async (ctx) => {
     await ctx.conversation.enter("turniketConversation")
+});
+
+bot.filter(ctx=>ctx.config.isAuth).filter(hears("OtpMenuBtn"), async (ctx) => {
+    if (!ctx.session.session_db.otpPlatform) {
+        ctx.session.session_db.otpPlatform = 'bot'
+        ctx.session.session_db.otpToken = null
+    }
+    await ctx.conversation.enter("otpConversation")
 });
 
 
