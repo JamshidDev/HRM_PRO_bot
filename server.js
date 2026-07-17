@@ -1,63 +1,32 @@
-import express from "express"
-import { Bot, webhookCallback} from "grammy"
+import { Bot } from "grammy"
 import dotenv from "dotenv"
-import cors from 'cors'
 
-import {configComposer, clientComposer, broadcastComposer} from "./composer/index.js"
-import {stopAllWorkers} from "./workers/workerOne.js"
-import cron from "node-cron"
-import {noteLogger, initialCronJob} from "./utils/helper.js"
+import { configComposer, clientComposer, broadcastComposer } from "./composer/index.js"
+import { stopAllWorkers } from "./workers/workerOne.js"
 import "./config/mongodbConfig.js"
 
-dotenv.config({quiet: true})
+dotenv.config({ quiet: true })
 
-const PORT = process.env.PORT || 3000
-const BASE_URL = process.env.BASE_URL
 const TOKEN = process.env.BOT_TOKEN
-const BOT_WORKING_MODE = process.env.BOT_WORKING_MODE || "long_polling_mode"
-
-
 
 const bot = new Bot(TOKEN)
-const app = express()
-app.use(express.json())
-app.use(cors())
-
 
 bot.use(configComposer)
 bot.use(clientComposer)
 bot.use(broadcastComposer)
 
-
-
-
-
-bot.command('start', async (ctx) => {
-    await ctx.reply('Hello!')
-})
-
-bot.command('video', async (ctx)=>{
-    const url = new URL('https://www.instagram.com/stories/jaloliddin_mashariipov/3754106076930045612?utm_source=ig_story_item_share&igsh=ejgydjUzZDZ1MnJv')
-    url.host = 'kkinstagram.com'
-    console.log(url)
-    await ctx.replyWithVideo(url.toString())
-})
-
-// initialCronJob(bot)
-
-
 // Global error catch
 bot.catch((err) => {
-    const ctx = err.ctx;
-    console.error(`Xato update ${ctx.update.update_id} da:`, err.error);
+    const ctx = err.ctx
+    console.error(`Xato update ${ctx.update.update_id} da:`, err.error)
     ctx.reply(`
 <i>❌ Serverda xatolik yuz berdi...</i>
 
 Adminga xabarni yuboring...
     `, {
-        parse_mode:"HTML"
+        parse_mode: "HTML"
     }).catch(() => {})
-});
+})
 
 const ALLOWED_UPDATES = [
     "my_chat_member",
@@ -68,35 +37,9 @@ const ALLOWED_UPDATES = [
     "chat_join_request",
 ]
 
-if (BOT_WORKING_MODE === "webhook_mode") {
-    app.use(`/${TOKEN}`, webhookCallback(bot, "express"));
-
-    app.listen(PORT, async () => {
-        console.log(`🚀 Server http://localhost:${PORT} da ishlayapti`)
-
-        const webhookUrl = `${BASE_URL}/${TOKEN}`
-
-        await bot.api.deleteWebhook({
-            drop_pending_updates: true
-        })
-
-        bot.api.setWebhook(webhookUrl, {
-            allowed_updates: ALLOWED_UPDATES
-        }).then(() => {
-            console.log(`Webhook bot set to ${webhookUrl}`);
-        }).catch((error) => {
-            console.log(error)
-        });
-    })
-} else {
-    // Polling'дан oldin webhook'ni o'chiramiz (aks holda getUpdates konflikt beradi).
-    await bot.api.deleteWebhook({ drop_pending_updates: true })
-    await bot.start({
-        drop_pending_updates: true,
-        allowed_updates: ALLOWED_UPDATES,
-    })
-}
-
+// Process-darajali handlerlar bot.start()'dan OLDIN ro'yxatga olinadi:
+// bot.start() long-polling siklida bloklaydi, shuning uchun undan keyin
+// qo'yilsa polling rejimida hech qachon ro'yxatga olinmaydi.
 process.on("unhandledRejection", (reason) => {
     console.error("❌ Unhandled Rejection:", reason)
 })
@@ -109,7 +52,16 @@ process.on("SIGINT", async () => {
     await stopAllWorkers()
     process.exit(0)
 })
+
 process.on("SIGTERM", async () => {
     await stopAllWorkers()
     process.exit(0)
+})
+
+// Long-polling. Avval webhook o'chiriladi — aks holda getUpdates konflikt beradi.
+await bot.api.deleteWebhook({ drop_pending_updates: true })
+await bot.start({
+    drop_pending_updates: true,
+    allowed_updates: ALLOWED_UPDATES,
+    onStart: (info) => console.log(`🤖 @${info.username} long-polling rejimida ishga tushdi`),
 })
