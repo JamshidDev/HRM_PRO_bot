@@ -1,4 +1,4 @@
-import {Keyboard} from "grammy"
+import {Keyboard, InlineKeyboard} from "grammy"
 
 const mainKeyboard =(ctx)=>{
     const keyboard = new Keyboard()
@@ -7,6 +7,8 @@ const mainKeyboard =(ctx)=>{
         .row()
         .text(ctx.t('TurniketBtn'))
         .text(ctx.t('logOutBtn'))
+        .row()
+        .text(ctx.t('OtpMenuBtn'))
         .row()
         .text(ctx.t('SupportBtn'))
         .row()
@@ -58,18 +60,11 @@ const yesOrNoKeyboard = (t)=>{
         .resized()
 }
 
-const turniketKeyboard = (t)=>{
-    return new Keyboard()
-        .text(t('verifiedImageBtn'))
-        .row()
-        .text(t('processImageBtn'))
-        .row()
-        .text(t('backToMainMenu'))
-        .resized()
+const otpKeyboard = (t, code)=>{
+    return new InlineKeyboard()
+        .copyText(t('otpCopyBtn'), code)
+        .text(t('otpResendBtn'), 'otp_resend')
 }
-
-
-
 
 
 export default  {
@@ -79,5 +74,5 @@ export default  {
     yesOrNoKeyboard,
     broadcastMsgKeyboard,
     cancelOperationKeyboard,
-    turniketKeyboard,
+    otpKeyboard,
 }

@@ -1,6 +1,7 @@
 import Keyboards from "../keyboards/index.js"
 import {authService} from "../service/service/index.js"
 import {mainConversation} from "./generalConversation.js"
+import {otpConversation} from "./otpConversation.js"
 import { escapeHTML } from "../utils/helper.js"
 import { InputFile } from 'grammy';
 import axios from "axios"
@@ -107,7 +108,12 @@ export async function registerConversation(conversation, ctx){
         await ctx.api.deleteMessage(ctx.chat.id, msg.message_id)
         conversation.session.session_db.isAuth = true
         conversation.session.session_db.isLogOut = false
-        await mainConversation(conversation, ctx)
+
+        if (conversation.session.session_db.pendingOtpIntent) {
+            await otpConversation(conversation, ctx)
+        } else {
+            await mainConversation(conversation, ctx)
+        }
 
     }else{
         await ctx.reply(ctx.t('reLogin'), {parse_mode:"HTML", reply_markup:Keyboards.loginKeyboard(ctx.t)})

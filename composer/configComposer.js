@@ -26,7 +26,11 @@ bot.use(session({
                 isLogOut:false,
                 isAuth:false,
                 uuid:null,
-                selectedDate:null
+                selectedDate:null,
+                otpToken:null,
+                otpPlatform:null,
+                otpExpiresAt:null,
+                pendingOtpIntent:false,
             }
         },
         storage: new MemorySessionStorage(),

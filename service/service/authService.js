@@ -93,9 +93,10 @@ const detachUsers =async (payload)=>{
 
 }
 
-const setService =async (payload)=>{
+const getProfile =async (payload)=>{
     try{
-        const {data} =  await axios.post(`/v1/telegram/menu/set-service`, payload?.data, {
+        const {data} =  await axios.get(`/v1/telegram/profile`, {
+            params:payload?.params,
             headers: payload?.uuid
                 ? { "Uuid": payload.uuid }
                 : undefined})
@@ -106,13 +107,9 @@ const setService =async (payload)=>{
 
 }
 
-const getProfile =async (payload)=>{
+const generateOtp =async (payload)=>{
     try{
-        const {data} =  await axios.get(`/v1/telegram/profile`, {
-            params:payload?.params,
-            headers: payload?.uuid
-                ? { "Uuid": payload.uuid }
-                : undefined})
+        const {data} = await axios.get(`/v1/telegram/get-otp`, {params: payload?.params})
         return [data, null]
     }catch (err){
         return [null, err.response?.data || err.message]
@@ -135,6 +132,6 @@ export const authService = {
     loginSystem,
     getUsers,
     detachUsers,
-    setService,
     getProfile,
+    generateOtp,
 }
