@@ -166,7 +166,7 @@ salaryAlertMessage =
 
 otpCode = 🔐 Tasdiqlash kodingiz: <code>{$code}</code>
 
-    <i>Kod 3 daqiqa amal qiladi.</i>
+    <i>Kod 2 daqiqa amal qiladi.</i>
 
 otpResendBtn = 🔄 Yangi kod olish
 

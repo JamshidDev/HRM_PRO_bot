@@ -70,17 +70,25 @@ export async function registerConversation(conversation, ctx){
     }
     const {worker} = response?.data.user
     const fullName = `${worker.first_name} ${worker.last_name} ${worker.middle_name}`
-    const responseBuffer =await axios.get(worker?.photo,{responseType:'arraybuffer'})
-    const buffer = Buffer.from(responseBuffer.data, 'binary')
-    const processed = await sharp(buffer)
-        .resize({ width: 1000, height: 1000, fit: 'inside', withoutEnlargement: true }) // Resize if needed
-        .toBuffer();
-    const inputFile = new InputFile(processed, 'photo.jpg');
-    await ctx.replyWithPhoto(inputFile,{
-        caption:ctx.t('isThisYou', {name:escapeHTML(fullName)}),
-        reply_markup:Keyboards.yesOrNoKeyboard(ctx.t),
-        parse_mode:"HTML"
-    })
+    try {
+        const responseBuffer = await axios.get(worker?.photo, {responseType:'arraybuffer', timeout: 8000})
+        const buffer = Buffer.from(responseBuffer.data, 'binary')
+        const processed = await sharp(buffer)
+            .resize({ width: 1000, height: 1000, fit: 'inside', withoutEnlargement: true }) // Resize if needed
+            .toBuffer();
+        const inputFile = new InputFile(processed, 'photo.jpg');
+        await ctx.replyWithPhoto(inputFile,{
+            caption:ctx.t('isThisYou', {name:escapeHTML(fullName)}),
+            reply_markup:Keyboards.yesOrNoKeyboard(ctx.t),
+            parse_mode:"HTML"
+        })
+    } catch (photoError) {
+        console.log("🔺 Xodim rasmini olishda xatolik:", photoError?.message, "URL:", worker?.photo)
+        await ctx.reply(ctx.t('isThisYou', {name:escapeHTML(fullName)}), {
+            reply_markup:Keyboards.yesOrNoKeyboard(ctx.t),
+            parse_mode:"HTML"
+        })
+    }
     const uuid = response?.data.user.uuid
     conversation.session.session_db.uuid = response?.data.user.uuid
 
