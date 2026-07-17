@@ -63,6 +63,7 @@ const yesOrNoKeyboard = (t)=>{
 const otpKeyboard = (t, code)=>{
     return new InlineKeyboard()
         .copyText(t('otpCopyBtn'), code)
+        .row()
         .text(t('otpResendBtn'), 'otp_resend')
 }
 

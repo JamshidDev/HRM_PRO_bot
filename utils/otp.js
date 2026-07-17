@@ -5,7 +5,7 @@ export async function issueOtp({chatId}) {
     if (err || !response?.data?.code) {
         return {ok: false}
     }
-    const expiresInSeconds = response.data.expires_in ?? 180
+    const expiresInSeconds = response.data.expires_in ?? 120
     return {
         ok: true,
         code: response.data.code,
