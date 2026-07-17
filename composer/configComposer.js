@@ -4,6 +4,7 @@ import {chatMembers} from "@grammyjs/chat-members"
 import {conversations} from "@grammyjs/conversations"
 import {registerConversations} from "../conversations/index.js"
 import {authService} from "../service/service/index.js"
+import {pendingReverify} from "../utils/pendingReverify.js"
 import dotenv from "dotenv"
 
 dotenv.config({quiet: true})
@@ -52,6 +53,11 @@ bot.use(async (ctx, next) => {
         for (let key of Object.keys(stats)) {
             await ctx.conversation.exit(key);
         }
+    }
+
+    if (pendingReverify.has(ctx.from.id.toString())) {
+        ctx.session.session_db.isAuth = false
+        pendingReverify.delete(ctx.from.id.toString())
     }
 
     const isAuth = ctx.session.session_db.isAuth

@@ -11,6 +11,7 @@ loginBtn =🔒 Tizimga kirish
 notFoundUser =⚠️ <i>Tizimda xodim topilmadi</i>!
 
 invalidContact = ⚠️ Iltimos telefon raqamingizni <b>📞 Telefon raqam yuborish</b> tugmasi orqali yuboring
+forcedLogout = ⚠️ Hisobingiz boshqa Telegram akkountidan tizimga kiritildi. Xavfsizlik uchun joriy seansingiz tugatildi.
 isThisYou = 📌 <b>{$name}</b>
 
     <i>Bu haqiqattan ham sizmisiz?</i>

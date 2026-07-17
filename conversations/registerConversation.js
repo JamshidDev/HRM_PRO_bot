@@ -6,6 +6,8 @@ import { escapeHTML } from "../utils/helper.js"
 import { InputFile } from 'grammy';
 import axios from "axios"
 import sharp from "sharp"
+import TelegramLink from "../models/TelegramLink.js"
+import {pendingReverify} from "../utils/pendingReverify.js"
 
 const validatePin = (pin)=>{
     return (isFinite(pin) && pin.toString().length === 14)
@@ -24,7 +26,9 @@ export async function registerConversation(conversation, ctx){
 
     ctx = await conversation.wait()
 
-    if (!ctx.message?.contact) {
+    const isOwnContact = (msg) => msg?.contact && msg.contact.user_id === ctx.from.id
+
+    if (!isOwnContact(ctx.message)) {
         do {
             await ctx.reply(ctx.t('invalidContact'),
                 {
@@ -32,7 +36,7 @@ export async function registerConversation(conversation, ctx){
                 }
             )
             ctx = await conversation.wait()
-        } while (!ctx.message?.contact)
+        } while (!isOwnContact(ctx.message))
     }
     const phone  = ctx.message.contact.phone_number.toString().slice(-9)
     await ctx.reply(ctx.t('enterPassportPin'), {
@@ -104,6 +108,21 @@ export async function registerConversation(conversation, ctx){
     const shortAnswer = ctx.message.text
     if(shortAnswer === ctx.t('yes')){
         const msg = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
+
+        const existingLink = await TelegramLink.findOne({uuid})
+        if (existingLink && existingLink.chatId !== ctx.from.id) {
+            const oldChatId = existingLink.chatId
+            await authService.deleteUser({id: oldChatId})
+            pendingReverify.add(oldChatId.toString())
+            try {
+                await ctx.api.sendMessage(oldChatId, ctx.t('forcedLogout'), {
+                    parse_mode: "HTML",
+                    reply_markup: Keyboards.loginKeyboard(ctx.t),
+                })
+            } catch (_) {}
+        }
+        await TelegramLink.findOneAndUpdate({uuid}, {chatId: ctx.from.id}, {upsert: true})
+
         await authService.registerUser({data:{uuid, chat_id:ctx.from.id}})
         await ctx.api.deleteMessage(ctx.chat.id, msg.message_id)
         conversation.session.session_db.isAuth = true
