@@ -23,21 +23,9 @@ export async function stopAllWorkers() {
     console.log("✅ All workers stopped")
 }
 
-const getTokenByAuth =async()=>{
-    const [response, error] = await authService.loginSystem()
-    if (error) return {status: false, token: null, msg: error?.message}
-    return {
-        status: true,
-        token: response.access_token,
-        msg: null,
-    }
-}
-
+// Broadcast ro'yxati — Bot-Token bilan (login/SYSTEM akkaunt KERAK EMAS).
 const loginAndGetAllUsers = async (bot,birthday=false) => {
-    const response = await getTokenByAuth()
-    if (!response.status) return {status: false, data: [], msg: response.msg}
-    const token = response.token
-    const [response2, error2] = await authService.getUsers({token, params:{birthdays:birthday || undefined, page:1,per_page:1000 }})
+    const [response2, error2] = await authService.getBotUsers({params:{birthdays:birthday || undefined, page:1,per_page:1000 }})
     if (error2) return {status: false, data: [], msg: error2?.message}
     return {
         status: true,
@@ -99,19 +87,14 @@ export  const initialBroadcastMsg = async (bot,userId, templateId,)=>{
 
     worker.on("message", async (msg) => {
         if (msg.type === 'success') {
-            const response = await getTokenByAuth()
-            if(!response.status){
-                await noteLogger(bot, "Login qilishda xatolik yuz berdi.", response.msg,)
-            }
-            const token = response.token
-
             const successUsers = msg.data.messagedUsersList
             const rejectedUsers = msg.data.rejectedUsersList
 
             const data = {
                 chat_ids:successUsers,
             }
-            const [_, error] = await authService.detachUsers({data, token})
+            // Bot-Token bilan detach (login KERAK EMAS).
+            const [_, error] = await authService.detachBotUsers({data})
             if(error){
                 await noteLogger(bot, "User deattachda xatolik yuz berdi...", error?.message,)
             }
