@@ -6,8 +6,6 @@ import { escapeHTML } from "../utils/helper.js"
 import { InputFile } from 'grammy';
 import axios from "axios"
 import sharp from "sharp"
-import TelegramLink from "../models/TelegramLink.js"
-import {pendingReverify} from "../utils/pendingReverify.js"
 
 const validatePin = (pin)=>{
     return (isFinite(pin) && pin.toString().length === 14)
@@ -108,23 +106,35 @@ export async function registerConversation(conversation, ctx){
     const shortAnswer = ctx.message.text
     if(shortAnswer === ctx.t('yes')){
         const msg = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
-
-        const existingLink = await TelegramLink.findOne({uuid})
-        if (existingLink && existingLink.chatId !== ctx.from.id) {
-            const oldChatId = existingLink.chatId
-            await authService.deleteUser({id: oldChatId})
-            pendingReverify.add(oldChatId.toString())
-            try {
-                await ctx.api.sendMessage(oldChatId, ctx.t('forcedLogout'), {
-                    parse_mode: "HTML",
-                    reply_markup: Keyboards.loginKeyboard(ctx.t),
-                })
-            } catch (_) {}
-        }
-        await TelegramLink.findOneAndUpdate({uuid}, {chatId: ctx.from.id}, {upsert: true})
-
-        await authService.registerUser({data:{uuid, chat_id:ctx.from.id}})
+        let [, regErr] = await authService.registerUser({data:{uuid, chat_id:ctx.from.id}})
         await ctx.api.deleteMessage(ctx.chat.id, msg.message_id)
+
+        // Boshqa telegram akkauntda faol hisob bor (400 active_account_exists) →
+        // foydalanuvchidan so'rab, deactivate_all=true bilan BITTA chaqiruvda qayta yuboramiz
+        // (alohida deactivate emas — uzilish/bug bo'lmasin).
+        if (regErr?.data?.active) {
+            await ctx.reply(ctx.t('activeElsewhere'), {parse_mode:"HTML", reply_markup:Keyboards.yesOrNoKeyboard(ctx.t)})
+            ctx = await conversation.wait()
+            while (!validateQuestion(ctx.message?.text, ctx.t)) {
+                await ctx.reply(ctx.t('invalidShortAnswer'), {parse_mode:"HTML"})
+                ctx = await conversation.wait()
+            }
+            if (ctx.message.text !== ctx.t('yes')) {
+                await ctx.reply(ctx.t('reLogin'), {parse_mode:"HTML", reply_markup:Keyboards.loginKeyboard(ctx.t)})
+                return
+            }
+            const msg2 = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
+            const res = await authService.registerUser({data:{uuid, chat_id:ctx.from.id, deactivate_all:true}})
+            await ctx.api.deleteMessage(ctx.chat.id, msg2.message_id)
+            regErr = res[1]
+        }
+
+        if (regErr) {
+            await ctx.reply(ctx.t('notFoundUser'),{parse_mode:"HTML"})
+            await ctx.reply(ctx.t('reLogin'), {parse_mode:"HTML", reply_markup:Keyboards.loginKeyboard(ctx.t)})
+            return
+        }
+
         conversation.session.session_db.isAuth = true
         conversation.session.session_db.isLogOut = false
 

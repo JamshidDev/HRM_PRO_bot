@@ -89,6 +89,8 @@ if (BOT_WORKING_MODE === "webhook_mode") {
         });
     })
 } else {
+    // Polling'дан oldin webhook'ni o'chiramiz (aks holda getUpdates konflikt beradi).
+    await bot.api.deleteWebhook({ drop_pending_updates: true })
     await bot.start({
         drop_pending_updates: true,
         allowed_updates: ALLOWED_UPDATES,

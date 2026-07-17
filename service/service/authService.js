@@ -60,37 +60,24 @@ const getServices =async (payload)=>{
     }
 
 }
-const loginSystem =async ()=>{
+// Bot broadcast ro'yxati — Bot-Token bilan (login/Bearer KERAK EMAS).
+// Bot-Token axios interceptor'da global qo'shiladi (service/index.js).
+const getBotUsers =async (payload)=>{
     try{
-        const {data} =  await axios.post(`/auth/login`, {phone:977226656, password:'YFhwRUxYsaSs'})
+        const {data} =  await axios.get(`/v1/telegram/bot/users`, {params:payload?.params})
         return [data, null]
     }catch (err){
         return [null, err.response?.data || err.message]
     }
-
-}
-const getUsers =async (payload)=>{
-    try{
-        const {data} =  await axios.get(`/v1/admin/telegram/bot/users`, {
-            params:payload?.params,
-            headers:{ "Authorization":'Bearer '+payload.token }})
-        return [data, null]
-    }catch (err){
-        return [null, err.response?.data || err.message]
-    }
-
 }
 
-const detachUsers =async (payload)=>{
+const detachBotUsers =async (payload)=>{
     try{
-        const {data} =  await axios.post(`/v1/admin/telegram/bot/users-detach`, payload?.data, {
-            headers:{ "Authorization":'Bearer '+payload.token }
-        })
+        const {data} =  await axios.post(`/v1/telegram/bot/users-detach`, payload?.data)
         return [data, null]
     }catch (err){
         return [null, err.response?.data || err.message]
     }
-
 }
 
 const getProfile =async (payload)=>{
@@ -129,9 +116,8 @@ export const authService = {
     deleteUser,
     servicesUser,
     getServices,
-    loginSystem,
-    getUsers,
-    detachUsers,
+    getBotUsers,
+    detachBotUsers,
     getProfile,
     generateOtp,
 }

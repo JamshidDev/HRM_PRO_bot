@@ -66,8 +66,12 @@ bot.filter(hears("loginBtn"), async (ctx) => {
     await ctx.conversation.enter("registerConversation")
 })
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("logOutBtn"), async (ctx) => {
+    // Backend'da DB linkni deaktivatsiya (active=false) — session emas, DB yagona manba.
+    // Aks holda bot restartida (MemorySession yo'qoladi) chat qayta auth bo'lib qolardi.
+    await authService.deleteUser({id: ctx.from.id})
     ctx.session.session_db.isAuth = false
     ctx.session.session_db.isLogOut = true
+    ctx.session.session_db.uuid = null
     await ctx.reply(ctx.t('reLogin'), {parse_mode:"HTML", reply_markup:Keyboards.loginKeyboard(ctx.t)})
 })
 

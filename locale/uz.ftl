@@ -11,7 +11,6 @@ loginBtn =🔒 Tizimga kirish
 notFoundUser =⚠️ <i>Tizimda xodim topilmadi</i>!
 
 invalidContact = ⚠️ Iltimos telefon raqamingizni <b>📞 Telefon raqam yuborish</b> tugmasi orqali yuboring
-forcedLogout = ⚠️ Hisobingiz boshqa Telegram akkountidan tizimga kiritildi. Xavfsizlik uchun joriy seansingiz tugatildi.
 isThisYou = 📌 <b>{$name}</b>
 
     <i>Bu haqiqattan ham sizmisiz?</i>
@@ -37,6 +36,7 @@ nextEvent =Keyingi 👉
 
 logOutedMsg = Tizimdan chiqdingiz
 reLogin =🔒 Qayta tizimga kirish
+activeElsewhere =⚠️ <i>Bu hisob boshqa telegram akkauntda faol.</i> Shu qurilmaga o'tkazilsinmi? (avvalgi akkauntdan chiqariladi)
 comingSoon =<i>🎯 Tez orqada ishga tushishi reja qilingan...</i>
 noService = <i>Sizda hech qanday xizmat mavjud emas</i>
 
