@@ -36,6 +36,7 @@ nextEvent =Keyingi 👉
 
 logOutedMsg = Tizimdan chiqdingiz
 reLogin =🔒 Qayta tizimga kirish
+activeElsewhere =⚠️ <i>Bu hisob boshqa telegram akkauntda faol.</i> Shu qurilmaga o'tkazilsinmi? (avvalgi akkauntdan chiqariladi)
 comingSoon =<i>🎯 Tez orqada ishga tushishi reja qilingan...</i>
 noService = <i>Sizda hech qanday xizmat mavjud emas</i>
 

@@ -118,7 +118,6 @@ export const authService = {
     getServices,
     getBotUsers,
     detachBotUsers,
-    setService,
     getProfile,
     generateOtp,
 }
