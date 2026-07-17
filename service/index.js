@@ -2,7 +2,7 @@ import axios from 'axios'
 import dotenv from "dotenv"
 dotenv.config({quiet: true})
 const apiUrl = process.env.SERVICE_URL
-const TOKEN = process.env.API_TOKEN
+const TOKEN = process.env.BOT_TOKEN
 
 const instance = axios.create({
     baseURL: `${apiUrl}/api`
