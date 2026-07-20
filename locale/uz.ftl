@@ -1,4 +1,3 @@
-hi_everyone = Salom
 loading =<i>⏳ Kuting...</i>
 
 loginSystem = Salom 👋 <a href="tg://user?id={$id}">{$name}</a>.
@@ -27,17 +26,11 @@ ProfileBtn =ℹ️ Ma'lumotlarim
 ServiceBtn =🛜 Xizmatlar
 TurniketBtn =♻️ Turniket
 logOutBtn =🚪 Chiqish
-broadcastMessage =✍️ Xabar yuborish
 preview =⬅️  Oldingi
 next =Keyingi ➡️
 
-previewEvent =👈 Oldingi
-nextEvent =Keyingi 👉
-
-logOutedMsg = Tizimdan chiqdingiz
 reLogin =🔒 Qayta tizimga kirish
 activeElsewhere =⚠️ <i>Bu hisob boshqa telegram akkauntda faol.</i> Shu qurilmaga o'tkazilsinmi? (avvalgi akkauntdan chiqariladi)
-comingSoon =<i>🎯 Tez orqada ishga tushishi reja qilingan...</i>
 noService = <i>Sizda hech qanday xizmat mavjud emas</i>
 
 serviceName= Kerakli xizmatni tanlang!
@@ -54,14 +47,19 @@ service_dc1a0615566e11a7ebe5f6198e3a0aec = 🔰 Terminallar
 service_8514a7291109c3bbbdbafb909070e8b9 = 🔰 Oylik maosh
 service_708f8b59a77f3ec5c5f936a514513ece = 🔰 Turniket hodisalar
 service_c5636e99119f742564023ff52399d721 = 🔰 Tibbiy ko'rik
-service_e2fcd659adbeb4c87d58ab8c1f23ff03 = 🔰 Shikoyat yuborish
 
 
 backToMainMenu =🔙 Orqaga
 backToServiceMenu =🔙 Xizmatlarga qaytish
 backToYearMenu =🔙 Yilga qaytish
 
-notFoundData =<i>⚠️ Tzimda ma'lumot topilmadi</i>
+notFoundData =<i>⚠️ Tizimda ma'lumot topilmadi</i>
+
+serviceUnavailable = ⚠️ <b>Xizmat vaqtincha ishlamayapti</b>
+
+    <i>Iltimos, birozdan so'ng qayta urinib ko'ring.</i>
+
+serviceUnavailableShort = ⚠️ Xizmat vaqtincha ishlamayapti. Birozdan so'ng urinib ko'ring.
 
 selectYear =<b>Yilni tanlang</b>
 
@@ -88,17 +86,6 @@ month_9 = Sentyabr
 month_10 = Oktyabr
 month_11 = Noyabr
 month_12 = Dekabr
-
-adminBroadcastMessage = <b>⚠️ Barcha foydalanuvchilarga xabar yuborish</b>
-    <i>Xabar turini tanlang!</i>
-
-invalidBroadcastMsg = ⚠️ Noto'g'ri ma'lumot
-
-    <i>👇 Tugma orqali tanlang!</i>
-
-technicalMsgMenu = 🛠 Texnik xabarnoma
-salaryMsgMenu = 💰 Ish haqi xabarnoma
-customMsgMenu = 📝 Forward xabarnoma
 
 supportMsg = <b>📩 Hurmatli foydalanuvchi!</b>
     <i>Savollaringiz yoki muammolaringiz bo‘lsa, bizning qo‘llab-quvvatlash jamoamizga murojaat qilishingiz mumkin.</i>

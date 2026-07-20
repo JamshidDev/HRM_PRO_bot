@@ -2,7 +2,7 @@ import Keyboards from "../keyboards/index.js"
 import {authService} from "../service/service/index.js"
 import {mainConversation} from "./generalConversation.js"
 import {otpConversation} from "./otpConversation.js"
-import { escapeHTML } from "../utils/helper.js"
+import { escapeHTML, deleteLoader } from "../utils/helper.js"
 import { InputFile } from 'grammy';
 import axios from "axios"
 import sharp from "sharp"
@@ -62,7 +62,7 @@ export async function registerConversation(conversation, ctx){
     }
     const {message_id} = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
     const [response, error] = await authService.checkRegisterUser({data})
-    await ctx.api.deleteMessage(ctx.chat.id, message_id)
+    await deleteLoader(ctx, message_id)
     if(!response?.data){
         await ctx.reply(ctx.t('notFoundUser'),{parse_mode:"HTML"})
         await ctx.reply(ctx.t('reLogin'), {parse_mode:"HTML", reply_markup:Keyboards.loginKeyboard(ctx.t)})
@@ -113,7 +113,7 @@ export async function registerConversation(conversation, ctx){
     if(shortAnswer === ctx.t('yes')){
         const msg = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
         let [, regErr] = await authService.registerUser({data:{uuid, chat_id:ctx.from.id}})
-        await ctx.api.deleteMessage(ctx.chat.id, msg.message_id)
+        await deleteLoader(ctx, msg.message_id)
 
         // Boshqa telegram akkauntda faol hisob bor (400 active_account_exists) →
         // foydalanuvchidan so'rab, deactivate_all=true bilan BITTA chaqiruvda qayta yuboramiz
@@ -131,7 +131,7 @@ export async function registerConversation(conversation, ctx){
             }
             const msg2 = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
             const res = await authService.registerUser({data:{uuid, chat_id:ctx.from.id, deactivate_all:true}})
-            await ctx.api.deleteMessage(ctx.chat.id, msg2.message_id)
+            await deleteLoader(ctx, msg2.message_id)
             regErr = res[1]
         }
 

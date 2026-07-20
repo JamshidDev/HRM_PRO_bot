@@ -1,13 +1,11 @@
 import { Composer, MemorySessionStorage, session } from "grammy"
 import { I18n} from "@grammyjs/i18n"
-import {chatMembers} from "@grammyjs/chat-members"
 import {conversations} from "@grammyjs/conversations"
 import {registerConversations} from "../conversations/index.js"
 import {authService} from "../service/service/index.js"
 import dotenv from "dotenv"
 
 dotenv.config({quiet: true})
-const adapter = new MemorySessionStorage()
 const bot = new Composer()
 const notificationId = process.env.NOTIFICATION_ID
 
@@ -27,8 +25,6 @@ bot.use(session({
                 isAuth:false,
                 uuid:null,
                 selectedDate:null,
-                otpToken:null,
-                otpPlatform:null,
                 otpExpiresAt:null,
                 pendingOtpIntent:false,
             }
@@ -41,11 +37,9 @@ bot.use(session({
 }));
 bot.use(i18n)
 
-bot.use(chatMembers(adapter))
 bot.use(conversations())
 
 bot.use(async (ctx, next) => {
-    const ADMIN_IDS = [1038293334,5011373330]
     let permissions = [ctx.t('backToMainMenu'),ctx.t('backToServiceMenu'), ctx.t('backToYearMenu'), '/start', ctx.t('cancelOperation')]
     if (permissions.includes(ctx.message?.text)) {
         const stats = await ctx.conversation.active();
@@ -57,7 +51,6 @@ bot.use(async (ctx, next) => {
     const isAuth = ctx.session.session_db.isAuth
     const isLogOut = ctx.session.session_db.isLogOut
     ctx.config = {
-        isAdmin:ADMIN_IDS.includes(ctx.from.id),
         isAuth: false,
         notificationId,
     }
@@ -65,13 +58,15 @@ bot.use(async (ctx, next) => {
     if(!isAuth && !isLogOut){
         const [response, error] = await authService.checkUserInfo({id:ctx.from.id})
 
-        if(response?.data){
+        // uuid'siz hech bir xizmat ishlamaydi — shuning uchun uuid bor bo'lsagina auth deb hisoblaymiz.
+        const linkedUuid = response?.data?.user?.uuid
+
+        if(linkedUuid){
             ctx.session.session_db.isAuth = true
-            ctx.session.session_db.uuid = response.data.user.uuid
+            ctx.session.session_db.uuid = linkedUuid
             ctx.config.isAuth = true
         }else{
-            console.log(error)
-            console.log("🔺 Bazada user ma'lumotlari topilmadi...")
+            console.log("🔺 Bazada user ma'lumotlari topilmadi:", error)
         }
     }
     else ctx.config.isAuth = !!isAuth;

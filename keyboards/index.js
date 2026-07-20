@@ -12,9 +12,6 @@ const mainKeyboard =(ctx)=>{
         .row()
         .text(ctx.t('SupportBtn'))
         .row()
-    if(ctx.config.isAdmin){
-        keyboard.text(ctx.t('broadcastMessage'))
-    }
 
     keyboard.resized()
     return keyboard
@@ -41,18 +38,6 @@ const loginKeyboard = (t)=>{
         .resized()
 }
 
-const broadcastMsgKeyboard = (t)=>{
-    return new Keyboard()
-        .text(t('technicalMsgMenu'))
-        .row()
-        .text(t('salaryMsgMenu'))
-        .row()
-        .text(t('customMsgMenu'))
-        .row()
-        .text(t('backToMainMenu'))
-        .resized()
-}
-
 const yesOrNoKeyboard = (t)=>{
     return new Keyboard()
         .text(t('yes'))
@@ -73,7 +58,6 @@ export default  {
     phoneKeyboard,
     loginKeyboard,
     yesOrNoKeyboard,
-    broadcastMsgKeyboard,
     cancelOperationKeyboard,
     otpKeyboard,
 }

@@ -60,26 +60,6 @@ const getServices =async (payload)=>{
     }
 
 }
-// Bot broadcast ro'yxati — Bot-Token bilan (login/Bearer KERAK EMAS).
-// Bot-Token axios interceptor'da global qo'shiladi (service/index.js).
-const getBotUsers =async (payload)=>{
-    try{
-        const {data} =  await axios.get(`/v1/telegram/bot/users`, {params:payload?.params})
-        return [data, null]
-    }catch (err){
-        return [null, err.response?.data || err.message]
-    }
-}
-
-const detachBotUsers =async (payload)=>{
-    try{
-        const {data} =  await axios.post(`/v1/telegram/bot/users-detach`, payload?.data)
-        return [data, null]
-    }catch (err){
-        return [null, err.response?.data || err.message]
-    }
-}
-
 const getProfile =async (payload)=>{
     try{
         const {data} =  await axios.get(`/v1/telegram/profile`, {
@@ -116,8 +96,6 @@ export const authService = {
     deleteUser,
     servicesUser,
     getServices,
-    getBotUsers,
-    detachBotUsers,
     getProfile,
     generateOtp,
 }

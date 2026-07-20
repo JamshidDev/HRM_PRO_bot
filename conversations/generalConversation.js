@@ -3,6 +3,8 @@ import {authService} from "../service/service/index.js"
 import {Keyboard} from "grammy"
 import numeral from "numeral"
 import {
+    escapeMarkdownV2,
+    deleteLoader,
     getMarkdownMsg,
     getMarkdownMsgEvent,
     getPaginationKeyboard,
@@ -10,12 +12,6 @@ import {
     getMarkdownMsgMed,
     getPaginationMedKeyboard,
 } from "../utils/helper.js"
-import {initialBroadcastMsg} from "../workers/workerOne.js"
-import axios from "axios"
-
-function escapeMarkdownV2(text) {
-    return text?.toString().replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, "\\$&")
-}
 
 
 
@@ -48,11 +44,6 @@ const myServiceList = [
         key:SERVICE_KEYS.MEDICAL,
         visible:true,
     },
-    // {
-    //     name:"service_e2fcd659adbeb4c87d58ab8c1f23ff03",
-    //     key:'e2fcd659adbeb4c87d58ab8c1f23ff03',
-    //     visible:true,
-    // },
 ]
 
 const monthList = [
@@ -126,9 +117,17 @@ export async function myServiceConversation(conversation, ctx){
     const uuid = conversation.session.session_db.uuid
     const {message_id: loadingMsgId} = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
     const [response,err] = await authService.servicesUser({uuid})
-    await ctx.api.deleteMessage(ctx.chat.id, loadingMsgId)
+    await deleteLoader(ctx, loadingMsgId)
 
-    if(response?.data.length===0){
+    // Backend yiqilsa/timeout bo'lsa response null keladi — .data'ga tegmasdan chiqamiz.
+    if(!Array.isArray(response?.data)){
+        console.log("🔺 servicesUser xatosi:", err)
+        await ctx.reply(ctx.t('serviceUnavailable'),{parse_mode:"HTML"})
+        await mainConversation(conversation, ctx)
+        return
+    }
+
+    if(response.data.length===0){
         await ctx.reply(ctx.t('noService'),{parse_mode:"HTML"})
         return
     }
@@ -183,10 +182,16 @@ export async function myServiceConversation(conversation, ctx){
 
     const {message_id: loadingMsgId2} = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
     const [response2,error] = await authService.getServices({params:{service:key}, uuid})
-    await ctx.api.deleteMessage(ctx.chat.id, loadingMsgId2)
+    await deleteLoader(ctx, loadingMsgId2)
+
+    if(!Array.isArray(response2?.data)){
+        console.log("🔺 getServices xatosi:", error)
+        await ctx.reply(ctx.t('serviceUnavailable'),{parse_mode:"HTML"})
+        await mainConversation(conversation, ctx)
+        return
+    }
+
     const data = response2.data
-
-
 
     await ctx.reply(getMarkdownMsg(data,ctx.t,1), {
         parse_mode: "MarkdownV2",
@@ -199,9 +204,17 @@ export async function mySalaryConversation(conversation, ctx){
     const uuid = conversation.session.session_db.uuid
     const serviceKey =conversation.session.session_db.selectedServiceKey
     const {message_id} = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
-    const [response,_] = await authService.getServices({params:{service:serviceKey}, uuid})
-    await ctx.api.deleteMessage(ctx.chat.id, message_id)
-    if(response?.months.length===0){
+    const [response,err] = await authService.getServices({params:{service:serviceKey}, uuid})
+    await deleteLoader(ctx, message_id)
+
+    if(!Array.isArray(response?.months)){
+        console.log("🔺 oylik (months) xatosi:", err)
+        await ctx.reply(ctx.t('serviceUnavailable'),{parse_mode:"HTML"})
+        await mainConversation(conversation, ctx)
+        return
+    }
+
+    if(response.months.length===0){
         await ctx.reply(ctx.t('notFoundData'),{parse_mode:"HTML"})
         return
     }
@@ -290,8 +303,16 @@ export async function mySalaryConversation(conversation, ctx){
         const selectedMonth = monthList.filter(v=>ctx.t(v.name) === ctx.message.text)[0].id
 
         const loadingMsg = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
-        const [salaryResponse,err] = await authService.getServices({params:{service:salaryKey,year:selectedYear,month:selectedMonth}, uuid})
-        await ctx.api.deleteMessage(ctx.chat.id, loadingMsg.message_id)
+        const [salaryResponse,salaryErr] = await authService.getServices({params:{service:salaryKey,year:selectedYear,month:selectedMonth}, uuid})
+        await deleteLoader(ctx, loadingMsg.message_id)
+
+        // Xato bo'lsa siklni uzmaymiz — user boshqa oyni tanlab ko'rishi mumkin.
+        if(!Array.isArray(salaryResponse?.salary)){
+            console.log("🔺 oylik hisobot xatosi:", salaryErr)
+            await ctx.reply(ctx.t('serviceUnavailable'),{parse_mode:"HTML"})
+            continue
+        }
+
         await sendSalaryData(salaryResponse.salary, ctx)
 
         await ctx.reply(ctx.t('salaryAlertMessage'), {
@@ -317,35 +338,6 @@ export async function mySalaryConversation(conversation, ctx){
 
 }
 
-export async function adminMsgConversation(conversation, ctx){
-    await ctx.reply(ctx.t('adminBroadcastMessage'),{parse_mode:"HTML", reply_markup:Keyboards.broadcastMsgKeyboard(ctx.t)})
-    ctx = await conversation.wait()
-    const validateMsg = (msg)=>{
-        return [ctx.t('technicalMsgMenu'),ctx.t('salaryMsgMenu'),ctx.t('customMsgMenu'),].includes(msg)
-    }
-    if (!validateMsg(ctx.message?.text)) {
-        do {
-            await ctx.reply(ctx.t('invalidBroadcastMsg'),
-                {
-                    parse_mode: "HTML",
-                }
-            )
-            ctx = await conversation.wait()
-        } while (!validateMsg(ctx.message?.text))
-    }
-
-    const selectedMenu = ctx.message.text
-    if(selectedMenu === ctx.t('technicalMsgMenu')){
-        await initialBroadcastMsg(ctx, 0, 0)
-        await mainConversation(conversation, ctx)
-    }else{
-        await ctx.reply(ctx.t('comingSoon'),{parse_mode: "HTML",})
-        await mainConversation(conversation, ctx)
-    }
-}
-
-
-
 const sendSalaryData =async (salaryData, ctx)=>{
     for (const v of salaryData) {
 
@@ -353,18 +345,19 @@ const sendSalaryData =async (salaryData, ctx)=>{
         let outText = ""
         let cardMoney = ""
 
-        for (const item of v.in) {
+        // Summalarda `.` / `-` bo'lishi mumkin — eskeyplanmasa Telegram "can't parse entities" 400 beradi.
+        for (const item of v.in ?? []) {
             inText += `\n>🔹${escapeMarkdownV2(item.code)} \\- ${escapeMarkdownV2(item.type)} \\- ${escapeMarkdownV2(item.amount)} so'm`
         }
-        inText += `\n\n>⚡️Jami hisoblandi\\: ${v.in_total} so'm`
+        inText += `\n\n>⚡️Jami hisoblandi\\: ${escapeMarkdownV2(v.in_total)} so'm`
 
 
-        for (const item of v.out) {
+        for (const item of v.out ?? []) {
             outText += `\n>🔸${escapeMarkdownV2(item.code)} \\- ${escapeMarkdownV2(item.type)} \\- ${escapeMarkdownV2(item.amount)} so'm`
         }
-        outText += `\n\n>⚡️Jami ushlanma\\: ${v.out_total} so'm`
+        outText += `\n\n>⚡️Jami ushlanma\\: ${escapeMarkdownV2(v.out_total)} so'm`
 
-        cardMoney = `\n\n\n\n>💳${v?.in_card?.code} \\: *${escapeMarkdownV2(numeral(v.in_card?.amount).format('0,0'))}* so'm `
+        cardMoney = `\n\n\n\n>💳${escapeMarkdownV2(v?.in_card?.code)} \\: *${escapeMarkdownV2(numeral(v.in_card?.amount).format('0,0'))}* so'm `
 
 
         const msgMarkdown2 =
@@ -397,7 +390,7 @@ export async function turniketConversation(conversation, ctx){
     const uuid = conversation.session.session_db.uuid
     const {message_id: loadingMsgId} = await ctx.reply(ctx.t('loading'), {parse_mode:"HTML"})
     const [response] = await authService.servicesUser({uuid})
-    await ctx.api.deleteMessage(ctx.chat.id, loadingMsgId)
+    await deleteLoader(ctx, loadingMsgId)
 
     const availableServiceIds = response?.data?.map(v => v.id) || []
     const turniketServices = myServiceList.filter(s => !s.visible && availableServiceIds.includes(s.key))
@@ -495,6 +488,13 @@ export async function selectDateConversation(conversation, ctx){
 
     const [response,err] = await authService.getServices({uuid, params:{service, date}})
 
+    if(!Array.isArray(response?.data)){
+        console.log("🔺 turniket hodisalari xatosi:", err)
+        await ctx.reply(ctx.t('serviceUnavailable'), {parse_mode: "HTML"})
+        await mainConversation(conversation, ctx)
+        return
+    }
+
     if(response.data.length === 0){
         await ctx.reply(ctx.t('noData'), {parse_mode: "HTML"})
         await selectDateConversation(conversation, ctx)
@@ -511,10 +511,17 @@ export async function selectDateConversation(conversation, ctx){
 }
 
 async function getMedConversation(conversation, ctx){
-    const service = conversation.session.session_db.selectedServiceKey || '708f8b59a77f3ec5c5f936a514513ece'
+    const service = conversation.session.session_db.selectedServiceKey || SERVICE_KEYS.MEDICAL
     const uuid = conversation.session.session_db.uuid
 
-    const [response,_] = await authService.getServices({uuid, params:{service}})
+    const [response,err] = await authService.getServices({uuid, params:{service}})
+
+    if(!Array.isArray(response?.data)){
+        console.log("🔺 tibbiy ko'rik xatosi:", err)
+        await ctx.reply(ctx.t('serviceUnavailable'), {parse_mode: "HTML"})
+        await mainConversation(conversation, ctx)
+        return
+    }
 
     if(response.data.length ===0){
         await ctx.reply(ctx.t('noData'), {parse_mode: "HTML"})
@@ -534,12 +541,15 @@ const getTodayEvents = async(ctx, conversation)=>{
     const serviceKey = SERVICE_KEYS.TURNIKET
     const uuid = conversation.session.session_db.uuid
     const [response,err] = await authService.getServices({uuid, params:{service:serviceKey}})
-    const data = response.data
-    console.log(data)
-    
-    await ctx.reply(getMarkdownMsgEvent(data,ctx.t,1), {
+
+    // Bu "bonus" ko'rsatkich — xato bo'lsa jim o'tkazamiz, keyingi qadam (sana tanlash) davom etadi.
+    if(!Array.isArray(response?.data)){
+        console.log("🔺 bugungi hodisalar xatosi:", err)
+        return
+    }
+
+    await ctx.reply(getMarkdownMsgEvent(response.data,ctx.t,1), {
         parse_mode: "MarkdownV2",
-        
     })
 }
 

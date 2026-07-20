@@ -1,12 +1,5 @@
 import {InlineKeyboard} from "grammy"
-import dotenv from "dotenv"
-import cron from "node-cron"
-import {initialBroadcastMsg} from "../workers/workerOne.js"
 
-
-dotenv.config({quiet: true})
-
-const notificationId = process.env.NOTIFICATION_ID
 const pageSize = 15
 
 export function escapeMarkdownV2(text) {
@@ -25,6 +18,17 @@ export function escapeHTML(text) {
         .replace(/"/g, '&quot;')
         .trim();
   }
+
+// "Kuting..." xabarini o'chirish. User uni qo'lda o'chirgan bo'lishi yoki 48 soatdan
+// eski bo'lishi mumkin — bunday hollarda Telegram 400 beradi va bu xatolik emas.
+export async function deleteLoader(ctx, messageId) {
+    if (!messageId) return
+    try {
+        await ctx.api.deleteMessage(ctx.chat.id, messageId)
+    } catch {
+        // ataylab jim
+    }
+}
 
 const getMarkdownMsg = (data,t, page=1)=>{
     const totalItems = data.length
@@ -50,7 +54,8 @@ const getMarkdownMsgEvent = (data,t, page=1)=>{
     const pageItems = data.map((v, index)=>({...v,number:index+1 })).slice(start, end)
     let msgMarkdown2 =t('eventStatus')+`\n`
     for (const item of pageItems) {
-        msgMarkdown2 += `\n> ${item.number}\\. ${item?.direction? '🔹' :'🔸'} ${escapeMarkdownV2(item.event_date)}\\ ${escapeMarkdownV2(item.event_time)} *${escapeMarkdownV2(item.device)}*`
+        // `\\ ` (probel eskeypi) MarkdownV2'da noto'g'ri — Telegram 400 qaytaradi.
+        msgMarkdown2 += `\n> ${item.number}\\. ${item?.direction? '🔹' :'🔸'} ${escapeMarkdownV2(item.event_date)} ${escapeMarkdownV2(item.event_time)} *${escapeMarkdownV2(item.device)}*`
     }
     msgMarkdown2 += `
 \n\n ${t('totalEvent', {n:totalItems})}
@@ -68,11 +73,9 @@ const getMarkdownMsgMed = (data,t, page=1)=>{
     const pageItems = data.map((v, index)=>({...v,number:index+1 })).slice(start, end)
     let msgMarkdown2 =t('medMessageTitle')+`\n\n`
     for (const item of pageItems) {
-//         msgMarkdown2 += `
-// \n> ${item.number}\\. ${item?.status} \n> ${escapeMarkdownV2(item.from)} \n> ${escapeMarkdownV2(item.to)}`
         msgMarkdown2 +=t('medContent', {
             number:item.number,
-            status:item?.status,
+            status:escapeMarkdownV2(item?.status),
             from:escapeMarkdownV2(item.from),
             to:escapeMarkdownV2(item.to),
         }) + '\n\n'
@@ -107,23 +110,4 @@ const getPaginationMedKeyboard = (data,page=1,t)=>{
     return keyboard
 }
 
-const noteLogger = async (bot, title, msg, error=true)=>{
-    await bot.api.sendMessage(notificationId, `
-*${error? '⚠️' : '✅'} ${error? title : 'Xabar'}*
-
-${error? 'Error message:':'Message'}
->${escapeMarkdownV2(msg)}`
-,{parse_mode:"MarkdownV2"} )
-}
-
-const initialCronJob = (bot)=>{
-    console.log("🕑 cron job ishga tushdi — O‘zbekiston vaqti bo‘yicha 07:00 da")
-    cron.schedule("0 7 * * *", async () => {
-        await noteLogger(bot, null, "🕑 Cron job ishga tushdi — O‘zbekiston vaqti bo‘yicha 07:00 da", false)
-        await initialBroadcastMsg(bot, 1, 1)
-    },{
-        timezone: "Asia/Tashkent"
-    })
-}
-
-export {getMarkdownMsg, getPaginationKeyboard, noteLogger, initialCronJob, getMarkdownMsgEvent, getPaginationEventKeyboard , getMarkdownMsgMed, getPaginationMedKeyboard}
+export {getMarkdownMsg, getPaginationKeyboard, getMarkdownMsgEvent, getPaginationEventKeyboard , getMarkdownMsgMed, getPaginationMedKeyboard}
