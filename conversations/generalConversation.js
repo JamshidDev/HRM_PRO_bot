@@ -201,7 +201,7 @@ export async function mySalaryConversation(conversation, ctx){
     const {message_id} = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
     const [response,_] = await authService.getServices({params:{service:serviceKey}, uuid})
     await ctx.api.deleteMessage(ctx.chat.id, message_id)
-    if(response?.months.length===0){
+    if(!response?.months?.length){
         await ctx.reply(ctx.t('notFoundData'),{parse_mode:"HTML"})
         return
     }
@@ -209,7 +209,7 @@ export async function mySalaryConversation(conversation, ctx){
     const months = response.months
     const salaryKey = response.check_salary_key
 
-    const yearList = [...new Set(months.map(v=>v.year))]
+    const yearList = [...new Set(months.map(v=>v.year))].sort((a,b)=>a-b)
     const yearKeyboard = new Keyboard()
     yearList.forEach((item, index)=>{
         yearKeyboard.text(item)
