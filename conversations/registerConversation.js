@@ -3,9 +3,6 @@ import {authService} from "../service/service/index.js"
 import {mainConversation} from "./generalConversation.js"
 import {otpConversation} from "./otpConversation.js"
 import { escapeHTML } from "../utils/helper.js"
-import { InputFile } from 'grammy';
-import axios from "axios"
-import sharp from "sharp"
 
 const validatePin = (pin)=>{
     return (isFinite(pin) && pin.toString().length === 14)
@@ -70,25 +67,10 @@ export async function registerConversation(conversation, ctx){
     }
     const {worker} = response?.data.user
     const fullName = `${worker.first_name} ${worker.last_name} ${worker.middle_name}`
-    try {
-        const responseBuffer = await axios.get(worker?.photo, {responseType:'arraybuffer', timeout: 8000})
-        const buffer = Buffer.from(responseBuffer.data, 'binary')
-        const processed = await sharp(buffer)
-            .resize({ width: 1000, height: 1000, fit: 'inside', withoutEnlargement: true }) // Resize if needed
-            .toBuffer();
-        const inputFile = new InputFile(processed, 'photo.jpg');
-        await ctx.replyWithPhoto(inputFile,{
-            caption:ctx.t('isThisYou', {name:escapeHTML(fullName)}),
-            reply_markup:Keyboards.yesOrNoKeyboard(ctx.t),
-            parse_mode:"HTML"
-        })
-    } catch (photoError) {
-        console.log("🔺 Xodim rasmini olishda xatolik:", photoError?.message, "URL:", worker?.photo)
-        await ctx.reply(ctx.t('isThisYou', {name:escapeHTML(fullName)}), {
-            reply_markup:Keyboards.yesOrNoKeyboard(ctx.t),
-            parse_mode:"HTML"
-        })
-    }
+    await ctx.reply(ctx.t('isThisYou', {name:escapeHTML(fullName)}), {
+        reply_markup:Keyboards.yesOrNoKeyboard(ctx.t),
+        parse_mode:"HTML"
+    })
     const uuid = response?.data.user.uuid
     conversation.session.session_db.uuid = response?.data.user.uuid
 
