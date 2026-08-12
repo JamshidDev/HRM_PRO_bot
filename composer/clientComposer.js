@@ -1,8 +1,8 @@
-import {Composer, Keyboard} from "grammy"
+import {Composer} from "grammy"
 import {authService} from "../service/service/index.js"
 import {hears}  from "@grammyjs/i18n"
-import {getMarkdownMsg,
-    getPaginationKeyboard, escapeMarkdownV2, getPaginationEventKeyboard,getMarkdownMsgEvent, getPaginationMedKeyboard, getMarkdownMsgMed} from "../utils/helper.js"
+import {getMarkdownMsg, escapeHTML, deleteLoader,
+    getPaginationKeyboard, getPaginationEventKeyboard,getMarkdownMsgEvent, getPaginationMedKeyboard, getMarkdownMsgMed} from "../utils/helper.js"
 import Keyboards from "../keyboards/index.js"
 import {issueOtp} from "../utils/otp.js"
 
@@ -12,16 +12,17 @@ const bot = new Composer().chatType('private')
 
 bot.command('start', async (ctx) => {
     const payload = ctx.match?.trim()
-    const otpMatch = payload?.match(/^(web|mobile)-(.+)$/)
+    // Deep link: /start web-<token> yoki /start mobile-<token>. Backend `get-otp`
+    // faqat chat_id qabul qiladi, shuning uchun platforma/token saqlanmaydi —
+    // payload'dan bizga faqat "OTP so'ralyapti" degan signal kerak.
+    const isOtpDeepLink = /^(web|mobile)-.+$/.test(payload ?? "")
 
-    if (otpMatch) {
-        ctx.session.session_db.otpPlatform = otpMatch[1]
-        ctx.session.session_db.otpToken = otpMatch[2]
+    if (isOtpDeepLink) {
         ctx.session.session_db.pendingOtpIntent = true
     }
 
     if(ctx.config?.isAuth){
-        if (otpMatch) {
+        if (isOtpDeepLink) {
             await ctx.conversation.enter("otpConversation")
         } else {
             await ctx.conversation.enter("mainConversation")
@@ -125,33 +126,33 @@ const serviceKeys = {
 }
 
 bot.filter(ctx=>ctx.config.isAuth).on("callback_query:data", async ctx => {
-    const uuid = await ctx.session.session_db.uuid
+    const uuid = ctx.session.session_db.uuid
     const data = ctx.callbackQuery.data
-    const key = data.split(":")[0]
+    const [key, rawPage] = data.split(":")
+    const serviceKey = serviceKeys[key]
+    const page = Number(rawPage)
 
-    await ctx.answerCallbackQuery(
+    // Tanish bo'lmagan callback (eski xabar tugmasi, boshqa format) — jim yopamiz.
+    if (!serviceKey || !Number.isInteger(page) || page < 1) {
+        await ctx.answerCallbackQuery()
+        return
+    }
 
-        {
-            text:'Hurmatli xodim!\n\nUshbu bo\'limda ko\'rsatilayotgan oyli',
-            show_alert: true
-        }
-    );
+    const date = key === 'event' ? ctx.session.session_db.selectedDate : undefined
+    const [response, err] = await authService.getServices({ params:{ service:serviceKey, date}, uuid })
 
-    if(!data.toString().includes(':')) return
+    if (!Array.isArray(response?.data)) {
+        console.log("🔺 pagination xatosi:", err)
+        await ctx.answerCallbackQuery({text: ctx.t('serviceUnavailableShort'), show_alert: true})
+        return
+    }
 
-    const page = Number(data.split(":")[1])
-    const serviceKey =serviceKeys[key]
-    const date = key==='event'? ctx.session.session_db.selectedDate : undefined
-    const [response2] = await authService.getServices({ params:{ service:serviceKey, date}, uuid })
-    const dataList = response2.data
-
-    const keyboardBtn = getKeyboard(key, {data:dataList, t:ctx.t, page})
-    const markdownText = getMarkdown(key, {data:dataList, t:ctx.t, page})
-
-    await ctx.editMessageText(markdownText, {
+    const dataList = response.data
+    await ctx.editMessageText(getMarkdown(key, {data:dataList, t:ctx.t, page}), {
         parse_mode: "MarkdownV2",
-        reply_markup: keyboardBtn
+        reply_markup: getKeyboard(key, {data:dataList, t:ctx.t, page})
     })
+
     await ctx.answerCallbackQuery({
         text: ctx.t('passedPage', {n:page}),
         show_alert: false,
@@ -163,9 +164,6 @@ bot.filter(ctx=>ctx.config.isAuth).on("callback_query:data", async ctx => {
 bot.command('salary', async (ctx) => {
     await ctx.conversation.enter("mySalaryConversation")
 })
-bot.filter(ctx=>ctx.config.isAdmin).filter(hears("broadcastMessage"), async (ctx) => {
-    await ctx.conversation.enter("adminMsgConversation")
-})
 
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("SupportBtn"), async (ctx) => {
     await ctx.reply(ctx.t('supportMsg'), {parse_mode:"HTML"})
@@ -175,17 +173,23 @@ bot.filter(ctx=>ctx.config.isAuth).filter(hears("ProfileBtn"), async (ctx) => {
     const uuid = ctx.session.session_db.uuid
     const loadingMessage = await ctx.reply(ctx.t('loading'), {parse_mode:"HTML"})
     const [response, error] = await authService.getProfile({uuid})
-    await ctx.api.deleteMessage(ctx.chat.id, loadingMessage.message_id)
+    await deleteLoader(ctx, loadingMessage.message_id)
     const data = response?.data
-    const fullName = data?.last_name +' '+ data?.first_name+' '+ data?.middle_name
-    const organizationName = data?.positions[0]?.organization
-    const positionName = data?.positions[0]?.position
-    
+
+    if (!data) {
+        console.log("🔺 profil xatosi:", error)
+        await ctx.reply(ctx.t('serviceUnavailable'), {parse_mode:"HTML"})
+        return
+    }
+
+    // `positions` bo'sh/yo'q bo'lishi mumkin — ?.[0] bo'lmasa TypeError bo'lardi.
+    const position = data.positions?.[0]
+    const fullName = [data.last_name, data.first_name, data.middle_name].filter(Boolean).join(' ')
 
     await ctx.reply(ctx.t('profileMsg', {
-        fullName:fullName,
-        position:positionName,
-        organization:organizationName,
+        fullName: escapeHTML(fullName) || '—',
+        position: escapeHTML(position?.position) || '—',
+        organization: escapeHTML(position?.organization) || '—',
     }), {parse_mode:"HTML"})
 });
 
@@ -194,10 +198,6 @@ bot.filter(ctx=>ctx.config.isAuth).filter(hears("TurniketBtn"), async (ctx) => {
 });
 
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("OtpMenuBtn"), async (ctx) => {
-    if (!ctx.session.session_db.otpPlatform) {
-        ctx.session.session_db.otpPlatform = 'bot'
-        ctx.session.session_db.otpToken = null
-    }
     await ctx.conversation.enter("otpConversation")
 });
 

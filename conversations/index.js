@@ -5,7 +5,6 @@ import {
     mainConversation,
     myServiceConversation,
     mySalaryConversation,
-    adminMsgConversation,
     turniketConversation,
     selectDateConversation,
 } from "./generalConversation.js"
@@ -16,7 +15,6 @@ export function registerConversations(composer) {
     composer.use(createConversation(mainConversation))
     composer.use(createConversation(myServiceConversation))
     composer.use(createConversation(mySalaryConversation))
-    composer.use(createConversation(adminMsgConversation))
     composer.use(createConversation(turniketConversation))
     composer.use(createConversation(selectDateConversation))
     composer.use(createConversation(otpConversation))

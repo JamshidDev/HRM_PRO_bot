@@ -1,12 +1,13 @@
 import Keyboards from "../keyboards/index.js"
 import {issueOtp} from "../utils/otp.js"
+import {deleteLoader} from "../utils/helper.js"
 
 export async function otpConversation(conversation, ctx){
     conversation.session.session_db.pendingOtpIntent = false
 
     const {message_id} = await ctx.reply(ctx.t('loading'), {parse_mode:"HTML"})
     const result = await issueOtp({chatId: ctx.from.id})
-    await ctx.api.deleteMessage(ctx.chat.id, message_id)
+    await deleteLoader(ctx, message_id)
 
     if (!result.ok) {
         await ctx.reply(ctx.t('otpError'), {parse_mode:"HTML"})
