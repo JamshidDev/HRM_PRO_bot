@@ -222,7 +222,7 @@ export async function mySalaryConversation(conversation, ctx){
     const months = response.months
     const salaryKey = response.check_salary_key
 
-    const yearList = [...new Set(months.map(v=>v.year))]
+    const yearList = [...new Set(months.map(v=>v.year))].sort((a,b)=>a-b)
     const yearKeyboard = new Keyboard()
     yearList.forEach((item, index)=>{
         yearKeyboard.text(item)
