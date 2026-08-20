@@ -5,6 +5,7 @@ import {getMarkdownMsg, escapeHTML, deleteLoader,
     getPaginationKeyboard, getPaginationEventKeyboard,getMarkdownMsgEvent, getPaginationMedKeyboard, getMarkdownMsgMed} from "../utils/helper.js"
 import Keyboards from "../keyboards/index.js"
 import {issueOtp} from "../utils/otp.js"
+import {logError} from "../utils/logger.js"
 
 const bot = new Composer().chatType('private')
 
@@ -142,7 +143,7 @@ bot.filter(ctx=>ctx.config.isAuth).on("callback_query:data", async ctx => {
     const [response, err] = await authService.getServices({ params:{ service:serviceKey, date}, uuid })
 
     if (!Array.isArray(response?.data)) {
-        console.log("🔺 pagination xatosi:", err)
+        logError("pagination", err, { ctx })
         await ctx.answerCallbackQuery({text: ctx.t('serviceUnavailableShort'), show_alert: true})
         return
     }
@@ -177,7 +178,7 @@ bot.filter(ctx=>ctx.config.isAuth).filter(hears("ProfileBtn"), async (ctx) => {
     const data = response?.data
 
     if (!data) {
-        console.log("🔺 profil xatosi:", error)
+        logError("profil", error, { ctx })
         await ctx.reply(ctx.t('serviceUnavailable'), {parse_mode:"HTML"})
         return
     }

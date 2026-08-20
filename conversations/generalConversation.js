@@ -2,6 +2,7 @@ import Keyboards from "../keyboards/index.js"
 import {authService} from "../service/service/index.js"
 import {Keyboard} from "grammy"
 import numeral from "numeral"
+import {logError} from "../utils/logger.js"
 import {
     escapeMarkdownV2,
     deleteLoader,
@@ -121,7 +122,7 @@ export async function myServiceConversation(conversation, ctx){
 
     // Backend yiqilsa/timeout bo'lsa response null keladi — .data'ga tegmasdan chiqamiz.
     if(!Array.isArray(response?.data)){
-        console.log("🔺 servicesUser xatosi:", err)
+        logError("servicesUser", err, { ctx })
         await ctx.reply(ctx.t('serviceUnavailable'),{parse_mode:"HTML"})
         await mainConversation(conversation, ctx)
         return
@@ -185,7 +186,7 @@ export async function myServiceConversation(conversation, ctx){
     await deleteLoader(ctx, loadingMsgId2)
 
     if(!Array.isArray(response2?.data)){
-        console.log("🔺 getServices xatosi:", error)
+        logError("getServices", error, { ctx })
         await ctx.reply(ctx.t('serviceUnavailable'),{parse_mode:"HTML"})
         await mainConversation(conversation, ctx)
         return
@@ -208,7 +209,7 @@ export async function mySalaryConversation(conversation, ctx){
     await deleteLoader(ctx, message_id)
 
     if(!Array.isArray(response?.months)){
-        console.log("🔺 oylik (months) xatosi:", err)
+        logError("oylik/months", err, { ctx })
         await ctx.reply(ctx.t('serviceUnavailable'),{parse_mode:"HTML"})
         await mainConversation(conversation, ctx)
         return
@@ -308,7 +309,7 @@ export async function mySalaryConversation(conversation, ctx){
 
         // Xato bo'lsa siklni uzmaymiz — user boshqa oyni tanlab ko'rishi mumkin.
         if(!Array.isArray(salaryResponse?.salary)){
-            console.log("🔺 oylik hisobot xatosi:", salaryErr)
+            logError("oylik/hisobot", salaryErr, { ctx })
             await ctx.reply(ctx.t('serviceUnavailable'),{parse_mode:"HTML"})
             continue
         }
@@ -489,7 +490,7 @@ export async function selectDateConversation(conversation, ctx){
     const [response,err] = await authService.getServices({uuid, params:{service, date}})
 
     if(!Array.isArray(response?.data)){
-        console.log("🔺 turniket hodisalari xatosi:", err)
+        logError("turniket", err, { ctx })
         await ctx.reply(ctx.t('serviceUnavailable'), {parse_mode: "HTML"})
         await mainConversation(conversation, ctx)
         return
@@ -517,7 +518,7 @@ async function getMedConversation(conversation, ctx){
     const [response,err] = await authService.getServices({uuid, params:{service}})
 
     if(!Array.isArray(response?.data)){
-        console.log("🔺 tibbiy ko'rik xatosi:", err)
+        logError("tibbiy-ko'rik", err, { ctx })
         await ctx.reply(ctx.t('serviceUnavailable'), {parse_mode: "HTML"})
         await mainConversation(conversation, ctx)
         return
@@ -544,7 +545,7 @@ const getTodayEvents = async(ctx, conversation)=>{
 
     // Bu "bonus" ko'rsatkich — xato bo'lsa jim o'tkazamiz, keyingi qadam (sana tanlash) davom etadi.
     if(!Array.isArray(response?.data)){
-        console.log("🔺 bugungi hodisalar xatosi:", err)
+        logError("bugungi-hodisalar", err, { ctx })
         return
     }
 
