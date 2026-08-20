@@ -3,6 +3,7 @@ import { I18n} from "@grammyjs/i18n"
 import {conversations} from "@grammyjs/conversations"
 import {registerConversations} from "../conversations/index.js"
 import {authService} from "../service/service/index.js"
+import {logError} from "../utils/logger.js"
 import dotenv from "dotenv"
 
 dotenv.config({quiet: true})
@@ -74,6 +75,10 @@ bot.use(async (ctx, next) => {
             ctx.session.session_db.uuid = linkedUuid
             ctx.config.isAuth = true
         }else{
+            // Bu holat yangi (ro'yxatdan o'tmagan) har bir userda chiqadi, ya'ni
+            // normal oqim — logger botga yuborilmaydi. Backend'ning haqiqiy
+            // nosozliklari (5xx/timeout) service/index.js interceptor'i orqali
+            // baribir topic'ga tushadi.
             console.log("🔺 Bazada user ma'lumotlari topilmadi:", error)
         }
     }
@@ -87,7 +92,19 @@ bot.on("my_chat_member", async (ctx)=>{
     if(status === 'kicked'){
         const [_,error] = await authService.deleteUser({id:ctx.from.id})
         if(error){
-            await ctx.api.sendMessage(ctx.config.notificationId,error?.message )
+            logError("my_chat_member/deleteUser", error, { ctx })
+
+            // NOTIFICATION_ID sozlanmagan bo'lsa yoki xato matni bo'sh bo'lsa
+            // sendMessage o'zi throw qiladi — bu handler'da u unhandled
+            // rejection'ga aylanib, botni yiqitishi mumkin edi.
+            if(notificationId){
+                const text = error?.message || (typeof error === 'string' ? error : JSON.stringify(error))
+                try{
+                    await ctx.api.sendMessage(notificationId, `❌ deleteUser: ${text}`)
+                }catch(sendError){
+                    logError("my_chat_member/notify", sendError)
+                }
+            }
         }
     }
 })
