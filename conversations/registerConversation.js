@@ -126,7 +126,7 @@ export async function registerConversation(conversation, ctx){
         conversation.session.session_db.isAuth = true
         conversation.session.session_db.isLogOut = false
 
-        if (conversation.session.session_db.pendingOtpIntent) {
+        if (conversation.session.session_db.otpIntent) {
             await otpConversation(conversation, ctx)
         } else {
             await mainConversation(conversation, ctx)

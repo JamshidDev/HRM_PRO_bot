@@ -155,6 +155,10 @@ otpCode = 🔐 Tasdiqlash kodingiz: <code>{$code}</code>
 
     <i>Kod 2 daqiqa amal qiladi.</i>
 
+otpResetCode = 🔑 Parolni tiklash kodi: <code>{$code}</code>
+
+    <i>Kodni saytdagi maydonga kiriting. Kod 2 daqiqa amal qiladi.</i>
+
 otpResendBtn = 🔄 Yangi kod olish
 
 otpStillValid = ⏳ Joriy kod hali amal qiladi. {$n} soniyadan keyin qayta urinib ko'ring.

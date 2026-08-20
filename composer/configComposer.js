@@ -35,7 +35,9 @@ bot.use(session({
                 uuid:null,
                 selectedDate:null,
                 otpExpiresAt:null,
-                pendingOtpIntent:false,
+                // Deep link maqsadi: 'otp' (login kodi) | 'reset' (parolni tiklash) | null.
+                // Login tugagach qaysi oqimga qaytishni va kod xabarining matnini shu belgilaydi.
+                otpIntent:null,
             }
         },
         storage: new MemorySessionStorage(),

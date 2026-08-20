@@ -13,22 +13,40 @@ const bot = new Composer().chatType('private')
 
 bot.command('start', async (ctx) => {
     const payload = ctx.match?.trim()
-    // Deep link: /start web-<token> yoki /start mobile-<token>. Backend `get-otp`
-    // faqat chat_id qabul qiladi, shuning uchun platforma/token saqlanmaydi —
-    // payload'dan bizga faqat "OTP so'ralyapti" degan signal kerak.
-    const isOtpDeepLink = /^(web|mobile)-.+$/.test(payload ?? "")
 
-    if (isOtpDeepLink) {
-        ctx.session.session_db.pendingOtpIntent = true
+    // Deep link maqsadlari:
+    //   /start web | mobile | web-<token> | mobile-<token>  → tizimga kirish kodi
+    //   /start reset | reset-<token>                         → parolni tiklash kodi
+    //
+    // Token QISMI IXTIYORIY: web hozir `?start=web` ko'rinishida (token'siz)
+    // link berayapti. Avval bu yerda defis majburiy edi va shu sababli link
+    // avtomatik kod bermay, oddiy menyuni ochib qo'yardi.
+    //
+    // Backend `get-otp` faqat chat_id qabul qiladi, ya'ni <token> backendga
+    // uzatilmaydi — payload'dan bizga faqat "qaysi maqsadda kod so'ralyapti"
+    // degan signal kerak (kod matni shunga qarab o'zgaradi).
+    // Telegram deep-link payload: ≤64 belgi, faqat A-Za-z0-9_- ruxsat etiladi.
+    const intentOf = (value) => {
+        if (/^reset(-[A-Za-z0-9_-]{1,58})?$/.test(value)) return 'reset'
+        if (/^(web|mobile)(-[A-Za-z0-9_-]{1,57})?$/.test(value)) return 'otp'
+        return null
+    }
+
+    const otpIntent = intentOf(payload ?? "")
+
+    if (otpIntent) {
+        ctx.session.session_db.otpIntent = otpIntent
     }
 
     if(ctx.config?.isAuth){
-        if (isOtpDeepLink) {
+        if (otpIntent) {
             await ctx.conversation.enter("otpConversation")
         } else {
             await ctx.conversation.enter("mainConversation")
         }
     }else{
+        // Botni ilk marta ishlatgan user: avval login (telefon + PIN), keyin
+        // registerConversation oxirida otpIntent bo'yicha avtomatik kod chiqadi.
         await ctx.conversation.enter("registerConversation")
 
     }
@@ -54,7 +72,8 @@ bot.callbackQuery('otp_resend', async (ctx) => {
     }
 
     ctx.session.session_db.otpExpiresAt = result.expiresAt
-    await ctx.editMessageText(ctx.t('otpCode', {code: result.code}), {
+    const codeKey = ctx.session.session_db.otpIntent === 'reset' ? 'otpResetCode' : 'otpCode'
+    await ctx.editMessageText(ctx.t(codeKey, {code: result.code}), {
         parse_mode:"HTML",
         reply_markup: Keyboards.otpKeyboard(ctx.t, result.code),
     })
@@ -199,6 +218,9 @@ bot.filter(ctx=>ctx.config.isAuth).filter(hears("TurniketBtn"), async (ctx) => {
 });
 
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("OtpMenuBtn"), async (ctx) => {
+    // Menyudan olingan kod — har doim tizimga kirish kodi. Bu qatorsiz, avval
+    // reset link'i bilan kelgan userda "parolni tiklash" matni yopishib qolardi.
+    ctx.session.session_db.otpIntent = 'otp'
     await ctx.conversation.enter("otpConversation")
 });
 
