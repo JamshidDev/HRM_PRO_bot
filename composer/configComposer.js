@@ -15,6 +15,14 @@ const i18n = new I18n({
     directory:'locale',
 })
 
+// `ctx.from` yo'q update'larda session kaliti aniqlanmaydi (getSessionKey undefined
+// qaytaradi) va quyidagi barcha middleware'lar — session, i18n, auth — xato beradi.
+// Bizga bunday update'lar kerak emas, shuning uchun darhol to'xtatamiz.
+bot.use(async (ctx, next) => {
+    if (!ctx.from) return
+    await next()
+})
+
 bot.use(session({
     type: "multi",
     session_db: {
