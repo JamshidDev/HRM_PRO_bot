@@ -215,12 +215,35 @@ export async function mySalaryConversation(conversation, ctx){
         return
     }
 
-    if(response.months.length===0){
+    // Backend ba'zida `month` qiymati 1..12 oralig'idan tashqarida bo'lgan yozuv
+    // qaytaradi (kuzatilgani: month=0). Bunday yozuv uchun `month_0` tarjimasi
+    // yo'q — tugmada kalitning o'zi ko'rinib qolardi, ustiga bosilsa esa
+    // validateMonth uni tanimay "noto'g'ri" siklini boshlardi. Shu sababli
+    // bunday yozuvlarni menyudan chiqarib tashlaymiz.
+    const isValidMonth = (v) => {
+        const m = Number(v?.month)
+        return Number.isInteger(m) && m >= 1 && m <= 12
+    }
+
+    const months = response.months.filter(isValidMonth)
+    const invalidMonths = response.months.filter((v) => !isValidMonth(v))
+
+    // Ma'lumotning o'zi noto'g'ri — buni backend tuzatishi kerak. i18n'ning har
+    // bir menyu chizilishida takrorlanadigan xatosi o'rniga aniq qiymatlar bilan
+    // bitta xabar yuboramiz.
+    if(invalidMonths.length){
+        logError(
+            "oylik/noto'g'ri month qiymati",
+            new Error(`month 1..12 oraligida emas: ${JSON.stringify(invalidMonths)}`),
+            { ctx }
+        )
+    }
+
+    if(months.length===0){
         await ctx.reply(ctx.t('notFoundData'),{parse_mode:"HTML"})
         return
     }
 
-    const months = response.months
     const salaryKey = response.check_salary_key
 
     const yearList = [...new Set(months.map(v=>v.year))].sort((a,b)=>a-b)
