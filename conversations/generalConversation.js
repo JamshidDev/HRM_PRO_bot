@@ -18,6 +18,17 @@ import {
 
 
 
+// Javobning faqat SHAKLINI (kalit → tur) qaytaradi, qiymatlarini emas.
+// Javob ichida xodimning maoshi bo'lishi mumkin, log esa guruhga ketadi —
+// shuning uchun log'ga hech qachon qiymat tushmasligi kerak.
+const describeShape = (value) => {
+    if (value === null || typeof value !== "object") return `${value === null ? "null" : typeof value}`
+    if (Array.isArray(value)) return `array(${value.length})`
+    const keys = Object.entries(value).map(([k, v]) =>
+        `${k}: ${v === null ? "null" : Array.isArray(v) ? `array(${v.length})` : typeof v}`)
+    return keys.length ? `{ ${keys.join(", ")} }` : "{}"
+}
+
 const SERVICE_KEYS = {
     SALARY: '8514a7291109c3bbbdbafb909070e8b9',
     TURNIKET: '708f8b59a77f3ec5c5f936a514513ece',
@@ -209,7 +220,19 @@ export async function mySalaryConversation(conversation, ctx){
     await deleteLoader(ctx, message_id)
 
     if(!Array.isArray(response?.months)){
-        logError("oylik/months", err, { ctx })
+        // Bu shoxga ikki xil holat tushadi:
+        //   1) so'rov xato bergan — err to'la, log'da hammasi ko'rinadi;
+        //   2) backend 200 qaytargan, lekin javobda months massivi yo'q — bunda
+        //      err null bo'ladi va log faqat "xato obyekti yo'q" deb yozardi,
+        //      ya'ni sababni aniqlash imkonsiz edi.
+        // Ikkinchi holat uchun so'ralgan service va javobning shaklini qo'shamiz.
+        logError("oylik/months", err, {
+            ctx,
+            extra: err ? undefined : {
+                serviceKey: serviceKey ?? "(yo'q)",
+                javobShakli: describeShape(response),
+            },
+        })
         await ctx.reply(ctx.t('serviceUnavailable'),{parse_mode:"HTML"})
         await mainConversation(conversation, ctx)
         return

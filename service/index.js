@@ -26,8 +26,23 @@ instance.interceptors.request.use(function (config) {
 // Normal ish oqimining bir qismi bo'lgan javoblar — bularni logger botga
 // yuborish shovqin bo'ladi. auth/{id} 404: user hali ro'yxatdan o'tmagan,
 // bu har bir yangi foydalanuvchida chiqadi (configComposer'dagi auth tekshiruvi).
+// `message` — ixtiyoriy: berilsa javob tanasidagi message ham mos kelishi shart.
+// Shu tufayli bitta status butunlay ko'r bo'lib qolmaydi.
 const EXPECTED = [
     { method: 'get', pattern: /^\/v1\/telegram\/auth\/\d+$/, status: 404 },
+
+    // Ro'yxatdan o'tishda kiritilgan telefon/JSHSHIR HRM tizimida topilmasa
+    // backend 400 qaytaradi. Bu har bir noto'g'ri kiritishda takrorlanadigan
+    // normal oqim — registerConversation.js:63 userga notFoundUser ko'rsatib,
+    // qaytadan kirish tugmasini beradi. `message` sharti bor, ya'ni bu
+    // endpoint'dagi BOSHQA 400'lar (masalan so'rov tanasi noto'g'ri) baribir
+    // logger'ga tushadi.
+    {
+        method: 'post',
+        pattern: /^\/v1\/telegram\/auth\/check$/,
+        status: 400,
+        message: /topilmadi yoki mavjud emas/i,
+    },
 ]
 
 const isExpected = (err) => {
@@ -35,7 +50,14 @@ const isExpected = (err) => {
     if (!status) return false
     const method = (err?.config?.method || '').toLowerCase()
     const url = (err?.config?.url || '').split('?')[0]
-    return EXPECTED.some((e) => e.status === status && e.method === method && e.pattern.test(url))
+    const body = err?.response?.data
+    const bodyMessage = typeof body?.message === 'string' ? body.message : ''
+    return EXPECTED.some((e) =>
+        e.status === status &&
+        e.method === method &&
+        e.pattern.test(url) &&
+        (!e.message || e.message.test(bodyMessage))
+    )
 }
 
 // Xatolar authService'da tuple'ga o'ralib yutiladi va bot.catch'gacha yetib
