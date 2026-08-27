@@ -128,7 +128,14 @@ export async function mainConversation(conversation, ctx){
 export async function myServiceConversation(conversation, ctx){
     const uuid = conversation.session.session_db.uuid
     const {message_id: loadingMsgId} = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
-    const [response,err] = await authService.servicesUser({uuid})
+    // conversation.external: HRM backend'ga so'rovlar grammY orqali o'tmaydi.
+    // Conversation esa har bir yangi update'da funksiyani BOSHIDAN qayta ijro
+    // etadi — natijada oldingi barcha so'rovlar takrorlanardi (yuklama, va
+    // muhimi: qayta ijroda backend boshqa javob qaytarsa kod boshqa shoxga
+    // ketib, holat nomuvofiq bo'lardi). external() natijani log'ga yozadi va
+    // qayta ijroda o'shani qaytaradi, ya'ni so'rov bir marta ketadi.
+    const [response,err] = await conversation.external(() =>
+        authService.servicesUser({uuid}))
     await deleteLoader(ctx, loadingMsgId)
 
     // Backend yiqilsa/timeout bo'lsa response null keladi — .data'ga tegmasdan chiqamiz.
@@ -193,7 +200,8 @@ export async function myServiceConversation(conversation, ctx){
     }
 
     const {message_id: loadingMsgId2} = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
-    const [response2,error] = await authService.getServices({params:{service:key}, uuid})
+    const [response2,error] = await conversation.external(() =>
+        authService.getServices({params:{service:key}, uuid}))
     await deleteLoader(ctx, loadingMsgId2)
 
     if(!Array.isArray(response2?.data)){
@@ -226,7 +234,8 @@ export async function mySalaryConversation(conversation, ctx){
     // err null, months yo'q, user esa "Serverda xatolik" ko'rardi.
     const serviceKey = SERVICE_KEYS.SALARY
     const {message_id} = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
-    const [response,err] = await authService.getServices({params:{service:serviceKey}, uuid})
+    const [response,err] = await conversation.external(() =>
+        authService.getServices({params:{service:serviceKey}, uuid}))
     await deleteLoader(ctx, message_id)
 
     if(!Array.isArray(response?.months)){
@@ -364,7 +373,8 @@ export async function mySalaryConversation(conversation, ctx){
         const selectedMonth = monthList.filter(v=>ctx.t(v.name) === ctx.message.text)[0].id
 
         const loadingMsg = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
-        const [salaryResponse,salaryErr] = await authService.getServices({params:{service:salaryKey,year:selectedYear,month:selectedMonth}, uuid})
+        const [salaryResponse,salaryErr] = await conversation.external(() =>
+            authService.getServices({params:{service:salaryKey,year:selectedYear,month:selectedMonth}, uuid}))
         await deleteLoader(ctx, loadingMsg.message_id)
 
         // Xato bo'lsa siklni uzmaymiz — user boshqa oyni tanlab ko'rishi mumkin.
@@ -450,7 +460,8 @@ const sendSalaryData =async (salaryData, ctx)=>{
 export async function turniketConversation(conversation, ctx){
     const uuid = conversation.session.session_db.uuid
     const {message_id: loadingMsgId} = await ctx.reply(ctx.t('loading'), {parse_mode:"HTML"})
-    const [response] = await authService.servicesUser({uuid})
+    const [response] = await conversation.external(() =>
+        authService.servicesUser({uuid}))
     await deleteLoader(ctx, loadingMsgId)
 
     const availableServiceIds = response?.data?.map(v => v.id) || []
@@ -547,7 +558,8 @@ export async function selectDateConversation(conversation, ctx){
     const service = conversation.session.session_db.selectedServiceKey || SERVICE_KEYS.TURNIKET
     const uuid = conversation.session.session_db.uuid
 
-    const [response,err] = await authService.getServices({uuid, params:{service, date}})
+    const [response,err] = await conversation.external(() =>
+        authService.getServices({uuid, params:{service, date}}))
 
     if(!Array.isArray(response?.data)){
         logError("turniket", err, { ctx })
@@ -575,7 +587,8 @@ async function getMedConversation(conversation, ctx){
     const service = conversation.session.session_db.selectedServiceKey || SERVICE_KEYS.MEDICAL
     const uuid = conversation.session.session_db.uuid
 
-    const [response,err] = await authService.getServices({uuid, params:{service}})
+    const [response,err] = await conversation.external(() =>
+        authService.getServices({uuid, params:{service}}))
 
     if(!Array.isArray(response?.data)){
         logError("tibbiy-ko'rik", err, { ctx })
@@ -601,7 +614,8 @@ async function getMedConversation(conversation, ctx){
 const getTodayEvents = async(ctx, conversation)=>{
     const serviceKey = SERVICE_KEYS.TURNIKET
     const uuid = conversation.session.session_db.uuid
-    const [response,err] = await authService.getServices({uuid, params:{service:serviceKey}})
+    const [response,err] = await conversation.external(() =>
+        authService.getServices({uuid, params:{service:serviceKey}}))
 
     // Bu "bonus" ko'rsatkich — xato bo'lsa jim o'tkazamiz, keyingi qadam (sana tanlash) davom etadi.
     if(!Array.isArray(response?.data)){
