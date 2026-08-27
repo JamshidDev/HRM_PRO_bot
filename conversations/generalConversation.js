@@ -214,7 +214,17 @@ export async function myServiceConversation(conversation, ctx){
 
 export async function mySalaryConversation(conversation, ctx){
     const uuid = conversation.session.session_db.uuid
-    const serviceKey =conversation.session.session_db.selectedServiceKey
+
+    // Kalit sessiyadan emas, konstantadan olinadi. myServiceConversation bu
+    // yerga faqat key === SERVICE_KEYS.SALARY bo'lganda o'tadi, ya'ni menyu
+    // yo'lida sessiyadagi qiymat baribir aynan shu konstanta bo'ladi. Lekin
+    // clientComposer bu conversation'ga to'g'ridan-to'g'ri ham kiradi
+    // ("/salary" komandasi va "🔙 Yilga qaytish" tugmasi) — o'sha yo'llarda
+    // selectedServiceKey o'rnatilmagan (null) yoki boshqa xizmatdan qolib
+    // ketgan bo'ladi. Natijada so'rov `service` parametrisiz ketardi va
+    // backend 200 bilan { message, error: true, data: [] } qaytarardi:
+    // err null, months yo'q, user esa "Serverda xatolik" ko'rardi.
+    const serviceKey = SERVICE_KEYS.SALARY
     const {message_id} = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
     const [response,err] = await authService.getServices({params:{service:serviceKey}, uuid})
     await deleteLoader(ctx, message_id)
@@ -229,7 +239,7 @@ export async function mySalaryConversation(conversation, ctx){
         logError("oylik/months", err, {
             ctx,
             extra: err ? undefined : {
-                serviceKey: serviceKey ?? "(yo'q)",
+                serviceKey,
                 javobShakli: describeShape(response),
             },
         })
