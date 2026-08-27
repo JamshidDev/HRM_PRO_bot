@@ -296,7 +296,11 @@ export async function mySalaryConversation(conversation, ctx){
 
     while(true){
 
-        await ctx.reply(ctx.t('selectMonth', {n:selectedYear}),
+        // Yil String sifatida uzatiladi: Fluent son argumentini Intl.NumberFormat
+        // bilan formatlaydi va yilga mingliklar ajratgichini qo'shib qo'yadi
+        // ("2 024"). selectedYear'ning o'zi son bo'lib qoladi — u backend'ga
+        // year parametri sifatida ketadi.
+        await ctx.reply(ctx.t('selectMonth', {n:String(selectedYear)}),
             {
                 parse_mode:"HTML",
                 reply_markup:monthKeyboard
