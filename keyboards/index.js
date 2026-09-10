@@ -3,15 +3,13 @@ import {Keyboard, InlineKeyboard} from "grammy"
 const mainKeyboard =(ctx)=>{
     const keyboard = new Keyboard()
         .text(ctx.t('ProfileBtn'))
-        .text(ctx.t('ServiceBtn'))
-        .row()
-        .text(ctx.t('TurniketBtn'))
         .text(ctx.t('logOutBtn'))
         .row()
         .text(ctx.t('OtpMenuBtn'))
         .row()
         .text(ctx.t('SupportBtn'))
         .row()
+        // Xizmatlar va Turniket tugmalari hozircha disabled
 
     keyboard.resized()
     return keyboard
