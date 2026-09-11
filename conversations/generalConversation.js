@@ -2,7 +2,7 @@ import Keyboards from "../keyboards/index.js"
 import {authService} from "../service/service/index.js"
 import {Keyboard} from "grammy"
 import numeral from "numeral"
-import {logError} from "../utils/logger.js"
+import {logError, logWarning} from "../utils/logger.js"
 import {
     escapeMarkdownV2,
     deleteLoader,
@@ -270,11 +270,17 @@ export async function mySalaryConversation(conversation, ctx){
     const months = response.months.filter(isValidMonth)
     const invalidMonths = response.months.filter((v) => !isValidMonth(v))
 
-    // Ma'lumotning o'zi noto'g'ri — buni backend tuzatishi kerak. i18n'ning har
-    // bir menyu chizilishida takrorlanadigan xatosi o'rniga aniq qiymatlar bilan
-    // bitta xabar yuboramiz.
+    // Ma'lumotning o'zi noto'g'ri — buni backend tuzatishi kerak. Bot uchun bu
+    // xato emas: yozuv menyudan olib tashlanadi va foydalanuvchi hech narsani
+    // sezmaydi. Shu sababli logError emas, logWarning — 🔴 XATO o'rniga 🟡
+    // ogohlantirish va uzun dedup oynasi bilan ketadi.
+    //
+    // Bu joy oylik menyusi har chizilganda ishlaydi (jumladan "Yilga qaytish"
+    // qaytib kirganda ham), backenddagi buzuq yozuv esa o'zgarmaydi — 5
+    // daqiqalik oddiy dedup oynasida bitta buzuq yozuv topic'ni soatlab
+    // to'ldirib turardi (kuzatilgani: 5 daqiqada 13 marta).
     if(invalidMonths.length){
-        logError(
+        logWarning(
             "oylik/noto'g'ri month qiymati",
             new Error(`month 1..12 oraligida emas: ${JSON.stringify(invalidMonths)}`),
             { ctx }

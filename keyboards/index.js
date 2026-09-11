@@ -9,6 +9,8 @@ const mainKeyboard =(ctx)=>{
         .row()
         .text(ctx.t('SupportBtn'))
         .row()
+        .text(ctx.t('DownloadAppBtn'))
+        .row()
         // Xizmatlar va Turniket tugmalari hozircha disabled
 
     keyboard.resized()
@@ -50,6 +52,13 @@ const otpKeyboard = (t, code)=>{
         .text(t('otpResendBtn'), 'otp_resend')
 }
 
+const downloadAppKeyboard = (t)=>{
+    return new InlineKeyboard()
+        .url(t('playMarketBtn'), 'https://play.google.com/store/apps/details?id=hrms.railway.uz')
+        .row()
+        .url(t('appStoreBtn'), 'https://apps.apple.com/us/app/hr-rail/id6759365016')
+}
+
 
 export default  {
     mainKeyboard,
@@ -58,4 +67,5 @@ export default  {
     yesOrNoKeyboard,
     cancelOperationKeyboard,
     otpKeyboard,
+    downloadAppKeyboard,
 }
