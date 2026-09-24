@@ -89,11 +89,7 @@ month_11 = Noyabr
 month_12 = Dekabr
 
 supportMsg = <b>📩 Hurmatli foydalanuvchi!</b>
-    <i>Savollaringiz yoki muammolaringiz bo‘lsa, bizning qo‘llab-quvvatlash jamoamizga murojaat qilishingiz mumkin.</i>
-    <i>Biz sizga imkon qadar tezroq yordam beramiz. 🙌</i>
-
-    <i>📌 Qo‘llab-quvvatlash:</i>
-    👨‍💻 Telegram: @JAMACODER
+    <i>Agar yordam kerak bo‘lsa, kadrlar bo‘limiga murojaat qiling.</i>
 
 playMarketBtn =🤖 Play Market
 appStoreBtn =🍎 App Store
