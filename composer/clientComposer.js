@@ -96,9 +96,10 @@ bot.filter(ctx=>ctx.config.isAuth).filter(hears("logOutBtn"), async (ctx) => {
     await ctx.reply(ctx.t('reLogin'), {parse_mode:"HTML", reply_markup:Keyboards.loginKeyboard(ctx.t)})
 })
 
-bot.filter(ctx=>ctx.config.isAuth).filter(hears("ServiceBtn"), async (ctx) => {
-    await ctx.conversation.enter("myServiceConversation")
-})
+// Xizmatlar tugmasi hozircha disabled
+// bot.filter(ctx=>ctx.config.isAuth).filter(hears("ServiceBtn"), async (ctx) => {
+//     await ctx.conversation.enter("myServiceConversation")
+// })
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("backToServiceMenu"), async (ctx) => {
     await ctx.conversation.enter("myServiceConversation")
 })
@@ -189,6 +190,13 @@ bot.filter(ctx=>ctx.config.isAuth).filter(hears("SupportBtn"), async (ctx) => {
     await ctx.reply(ctx.t('supportMsg'), {parse_mode:"HTML"})
 })
 
+bot.filter(ctx=>ctx.config.isAuth).filter(hears("DownloadAppBtn"), async (ctx) => {
+    await ctx.reply(ctx.t('downloadAppMsg'), {
+        parse_mode:"HTML",
+        reply_markup: Keyboards.downloadAppKeyboard(ctx.t),
+    })
+})
+
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("ProfileBtn"), async (ctx) => {
     const uuid = ctx.session.session_db.uuid
     const loadingMessage = await ctx.reply(ctx.t('loading'), {parse_mode:"HTML"})
@@ -213,9 +221,10 @@ bot.filter(ctx=>ctx.config.isAuth).filter(hears("ProfileBtn"), async (ctx) => {
     }), {parse_mode:"HTML"})
 });
 
-bot.filter(ctx=>ctx.config.isAuth).filter(hears("TurniketBtn"), async (ctx) => {
-    await ctx.conversation.enter("turniketConversation")
-});
+// Turniket tugmasi hozircha disabled
+// bot.filter(ctx=>ctx.config.isAuth).filter(hears("TurniketBtn"), async (ctx) => {
+//     await ctx.conversation.enter("turniketConversation")
+// });
 
 bot.filter(ctx=>ctx.config.isAuth).filter(hears("OtpMenuBtn"), async (ctx) => {
     // Menyudan olingan kod — har doim tizimga kirish kodi. Bu qatorsiz, avval

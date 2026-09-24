@@ -11,6 +11,11 @@ const validatePin = (pin)=>{
 
 
 export async function registerConversation(conversation, ctx){
+    // ctx quyida conversation.wait() bilan qayta tayinlanadi va uni
+    // conversation.external() ichida o'qish tavsiya etilmaydi — chat_id butun
+    // suhbat davomida o'zgarmaydi, shuning uchun bir marta olib qo'yamiz.
+    const chatId = ctx.from.id
+
     await ctx.reply(ctx.t('loginSystem',
         {id:ctx.from.id,
          name:escapeHTML(ctx.from.first_name)
@@ -58,7 +63,14 @@ export async function registerConversation(conversation, ctx){
         pin
     }
     const {message_id} = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
-    const [response, error] = await authService.checkRegisterUser({data})
+    // conversation.external: HRM backend'ga so'rovlar grammY orqali o'tmaydi,
+    // shuning uchun conversation qayta ijro etilganda (har bir yangi update'da
+    // funksiya boshidan qayta bajariladi) ular ham takrorlanardi. external()
+    // natijani log'ga yozib qo'yadi va qayta ijroda o'sha natijani qaytaradi —
+    // so'rov faqat BIR marta ketadi. Ayniqsa registerUser kabi yozuv
+    // operatsiyalari uchun muhim.
+    const [response, error] = await conversation.external(() =>
+        authService.checkRegisterUser({data}))
     await deleteLoader(ctx, message_id)
     if(!response?.data){
         await ctx.reply(ctx.t('notFoundUser'),{parse_mode:"HTML"})
@@ -94,7 +106,8 @@ export async function registerConversation(conversation, ctx){
     const shortAnswer = ctx.message.text
     if(shortAnswer === ctx.t('yes')){
         const msg = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
-        let [, regErr] = await authService.registerUser({data:{uuid, chat_id:ctx.from.id}})
+        let [, regErr] = await conversation.external(() =>
+            authService.registerUser({data:{uuid, chat_id:chatId}}))
         await deleteLoader(ctx, msg.message_id)
 
         // Boshqa telegram akkauntda faol hisob bor (400 active_account_exists) →
@@ -112,7 +125,8 @@ export async function registerConversation(conversation, ctx){
                 return
             }
             const msg2 = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
-            const res = await authService.registerUser({data:{uuid, chat_id:ctx.from.id, deactivate_all:true}})
+            const res = await conversation.external(() =>
+                authService.registerUser({data:{uuid, chat_id:chatId, deactivate_all:true}}))
             await deleteLoader(ctx, msg2.message_id)
             regErr = res[1]
         }

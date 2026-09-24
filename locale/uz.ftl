@@ -22,6 +22,7 @@ no =🚫 Yo'q
 invalidShortAnswer = ⚠️ Iltimos  <b>✅ Ha</b> yoki  <b>🚫 Yo'q</b> deb tugma orqali javob bering
 mainMenuText =⚡ Asosiy menyu ⚡
 SupportBtn =🆘 Yordam
+DownloadAppBtn =📲 Ilovani yuklab olish
 ProfileBtn =ℹ️ Ma'lumotlarim
 ServiceBtn =🛜 Xizmatlar
 TurniketBtn =♻️ Turniket
@@ -88,12 +89,23 @@ month_11 = Noyabr
 month_12 = Dekabr
 
 supportMsg = <b>📩 Hurmatli foydalanuvchi!</b>
-    <i>Savollaringiz yoki muammolaringiz bo‘lsa, bizning qo‘llab-quvvatlash jamoamizga murojaat qilishingiz mumkin.</i>
-    <i>Biz sizga imkon qadar tezroq yordam beramiz. 🙌</i>
+    <i>Agar yordam kerak bo‘lsa, kadrlar bo‘limiga murojaat qiling.</i>
 
-    <i>📌 Qo‘llab-quvvatlash:</i>
-    👨‍💻 Telegram: @JAMACODER
-    👨‍💻 Telegram: @losemanki6656
+playMarketBtn =🤖 Play Market
+appStoreBtn =🍎 App Store
+
+downloadAppMsg = <b>📲 HR Rail ilovasini yuklab oling</b>
+
+    <i>Quyidagi tugmalar orqali ilovani telefoningizga o‘rnatishingiz mumkin.</i>
+
+    <b>🔐 Tizimga qanday kirish mumkin?</b>
+    <i>Ilovani o‘rnatgach, tizimga kirish uchun telefon raqamingiz va parolingizni kiriting.</i>
+
+    <b>❓ Parolni unutdingizmi?</b>
+    <i>Ilovadagi "Parolni unutdingizmi" tugmasini bosing — tasdiqlash kodi ushbu bot orqali yuboriladi va parolingizni tiklashingiz mumkin bo‘ladi.</i>
+
+    <b>⚠️ Muammo davom etsa</b>
+    <i>Yuqoridagi usullar yordam bermasa, kadrlar bo‘limiga murojaat qiling.</i>
 
 profileMsg = <b>Malumotlarim</b>
     👤Ism: <b>{$fullName}</b>

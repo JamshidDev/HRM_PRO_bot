@@ -75,6 +75,13 @@ yoziladi. Lokal ishlab chiqishda shu holat normal — hech narsa sozlash shart e
   tozalangan matni + stack'ning 1-frame'i) bo'yicha guruhlanadi. Bir xil xato
   `LOG_DEDUP_WINDOW_MS` (default 5 daqiqa) ichida **bir marta** yuboriladi;
   keyingi xabarda `🔁 oxirgi 5 daqiqada N marta` qatori ko'rinadi.
+- **Ogohlantirishlar alohida.** `logWarning(scope, err, meta)` — bot o'zi eplab
+  ketadigan, lekin xabar berishga arziydigan holatlar uchun (masalan backend
+  qaytargan buzuq yozuv). Sarlavhasi `🔴 XATO` emas, `🟡 OGOHLANTIRISH`, dedup
+  oynasi esa `LOG_WARN_DEDUP_WINDOW_MS` (default 6 soat) — sabab o'zgarmagani
+  uchun har 5 daqiqada eslatishning ma'nosi yo'q. Konsolga `console.warn`
+  bilan chiqadi (`console.error` perexvati uni 🔴 sifatida ikkinchi marta
+  yubormasligi uchun).
 - **Rate limit.** Daqiqada `LOG_MAX_PER_MIN` (default 20) xabardan oshsa
   qolganlari tashlanadi va oyna bo'shashi bilan bitta
   `⏳ N ta xabar rate limit tufayli tashlandi` xulosasi keladi.

@@ -3,15 +3,15 @@ import {Keyboard, InlineKeyboard} from "grammy"
 const mainKeyboard =(ctx)=>{
     const keyboard = new Keyboard()
         .text(ctx.t('ProfileBtn'))
-        .text(ctx.t('ServiceBtn'))
-        .row()
-        .text(ctx.t('TurniketBtn'))
         .text(ctx.t('logOutBtn'))
         .row()
         .text(ctx.t('OtpMenuBtn'))
         .row()
         .text(ctx.t('SupportBtn'))
         .row()
+        .text(ctx.t('DownloadAppBtn'))
+        .row()
+        // Xizmatlar va Turniket tugmalari hozircha disabled
 
     keyboard.resized()
     return keyboard
@@ -52,6 +52,13 @@ const otpKeyboard = (t, code)=>{
         .text(t('otpResendBtn'), 'otp_resend')
 }
 
+const downloadAppKeyboard = (t)=>{
+    return new InlineKeyboard()
+        .url(t('playMarketBtn'), 'https://play.google.com/store/apps/details?id=hrms.railway.uz')
+        .row()
+        .url(t('appStoreBtn'), 'https://apps.apple.com/us/app/hr-rail/id6759365016')
+}
+
 
 export default  {
     mainKeyboard,
@@ -60,4 +67,5 @@ export default  {
     yesOrNoKeyboard,
     cancelOperationKeyboard,
     otpKeyboard,
+    downloadAppKeyboard,
 }

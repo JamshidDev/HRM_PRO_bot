@@ -10,7 +10,13 @@ export async function otpConversation(conversation, ctx){
     const codeKey = isReset ? 'otpResetCode' : 'otpCode'
 
     const {message_id} = await ctx.reply(ctx.t('loading'), {parse_mode:"HTML"})
-    const result = await issueOtp({chatId: ctx.from.id})
+    // conversation.external: bu chaqiruv grammY orqali o'tmaydi, shuning uchun
+    // conversation qayta ijro etilganda (har bir yangi update'da) yana
+    // bajarilardi — backend'dan YANGI kod so'ralib, userga allaqachon
+    // ko'rsatilgan kod bilan mos kelmay qolardi. Ustiga issueOtp ichida
+    // Date.now() bor, ya'ni expiresAt ham har replay'da siljib ketardi.
+    const chatId = ctx.from.id
+    const result = await conversation.external(() => issueOtp({chatId}))
     await deleteLoader(ctx, message_id)
 
     if (!result.ok) {

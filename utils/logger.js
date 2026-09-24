@@ -21,6 +21,11 @@ const CHAT_ID = process.env.LOG_CHAT_ID
 const THREAD_ID = process.env.LOG_THREAD_ID
 const ENV_NAME = process.env.LOG_ENV || "unknown"
 const DEDUP_WINDOW_MS = Number(process.env.LOG_DEDUP_WINDOW_MS) || 5 * 60 * 1000
+// Ogohlantirishlar (bot o'zi eplab ketadigan, lekin xabar berishga arziydigan
+// holatlar — masalan backend qaytargan buzuq ma'lumot) xatolar bilan bir xil
+// tezlikda takrorlanmasligi kerak: sabab bir xil bo'lgani uchun har 5 daqiqada
+// eslatishning foydasi yo'q, faqat topic'ni to'ldiradi.
+const WARN_DEDUP_WINDOW_MS = Number(process.env.LOG_WARN_DEDUP_WINDOW_MS) || 6 * 60 * 60 * 1000
 const MAX_PER_MIN = Number(process.env.LOG_MAX_PER_MIN) || 20
 const CONSOLE_CAPTURE = (process.env.LOG_CONSOLE_ERRORS || "true") !== "false"
 
@@ -179,7 +184,7 @@ const seen = new Map()
 
 // Fingerprint yangi yoki oyna tugagan bo'lsa yuborish kerak. Oyna ichidagi
 // takrorlar faqat sanaladi va keyingi xabar oxirida ko'rsatiladi.
-const shouldSend = (fingerprint) => {
+const shouldSend = (fingerprint, windowMs = DEDUP_WINDOW_MS) => {
     const at = Date.now()
     const entry = seen.get(fingerprint)
 
@@ -190,7 +195,7 @@ const shouldSend = (fingerprint) => {
     }
 
     entry.count += 1
-    if (at - entry.lastSentAt < DEDUP_WINDOW_MS) return { send: false, repeat: entry.count }
+    if (at - entry.lastSentAt < windowMs) return { send: false, repeat: entry.count }
 
     const repeat = entry.count
     entry.count = 1
@@ -292,9 +297,12 @@ const describeCtx = (ctx) => {
 
 // ─── Xabar matni ───
 
-const buildText = (info, { scope, ctx, extra, repeat }) => {
+const buildText = (info, { scope, ctx, extra, repeat, level, windowMs = DEDUP_WINDOW_MS }) => {
+    const header = level === "warn"
+        ? `🟡 <b>OGOHLANTIRISH</b> · ${esc(ENV_NAME)}`
+        : `🔴 <b>XATO</b> · ${esc(ENV_NAME)}`
     const lines = [
-        `🔴 <b>XATO</b> · ${esc(ENV_NAME)}`,
+        header,
         `🕒 ${esc(formatTime(now()))}`,
         `📍 Joy: <code>${esc(scope || "unknown")}</code>`,
         `🧩 Turi: ${esc(info.type)}`,
@@ -313,8 +321,11 @@ const buildText = (info, { scope, ctx, extra, repeat }) => {
         lines.push(`<pre>${esc(cut(info.stack, MAX_STACK_LEN))}</pre>`)
     }
     if (repeat > 1) {
-        const minutes = Math.round(DEDUP_WINDOW_MS / 60000)
-        lines.push(`🔁 oxirgi ${minutes} daqiqada ${repeat} marta`)
+        const minutes = Math.round(windowMs / 60000)
+        const oraliq = minutes >= 60
+            ? `${Math.round(minutes / 60)} soatda`
+            : `${minutes} daqiqada`
+        lines.push(`🔁 oxirgi ${oraliq} ${repeat} marta`)
     }
 
     return lines.join("\n")
@@ -345,9 +356,11 @@ export const reportError = (err, meta = {}) => {
         }
 
         const info = describeError(err)
-        const { send, repeat } = shouldSend(fingerprintOf(meta.scope || "unknown", info))
+        const windowMs = meta.dedupWindowMs
+            || (meta.level === "warn" ? WARN_DEDUP_WINDOW_MS : DEDUP_WINDOW_MS)
+        const { send, repeat } = shouldSend(fingerprintOf(meta.scope || "unknown", info), windowMs)
         if (!send) return
-        dispatch(buildText(info, { ...meta, repeat }))
+        dispatch(buildText(info, { ...meta, repeat, windowMs }))
     } catch (e) {
         rawWarn("⚠️  reportError ishlamadi:", e?.message || e)
     }
@@ -363,6 +376,18 @@ export const reportEvent = (text) => {
 export const logError = (scope, err, meta = {}) => {
     rawError(`❌ [${scope}]`, err)
     reportError(err, { ...meta, scope })
+}
+
+/**
+ * Xato emas, lekin e'tibor talab qiladigan holat (bot ishlashda davom etadi).
+ * 🔴 o'rniga 🟡 bilan ketadi va dedup oynasi uzunroq — bir xil sabab topic'ni
+ * to'ldirib yubormaydi. console.error emas, console.warn ishlatiladi: aks holda
+ * initConsoleCapture() perexvati orqali xuddi shu holat ikkinchi marta,
+ * "console.error" scope'ida va 🔴 sifatida yuborilardi.
+ */
+export const logWarning = (scope, err, meta = {}) => {
+    rawWarn(`⚠️  [${scope}]`, err)
+    reportError(err, { ...meta, scope, level: "warn" })
 }
 
 /**

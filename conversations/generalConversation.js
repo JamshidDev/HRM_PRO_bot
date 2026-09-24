@@ -2,7 +2,7 @@ import Keyboards from "../keyboards/index.js"
 import {authService} from "../service/service/index.js"
 import {Keyboard} from "grammy"
 import numeral from "numeral"
-import {logError} from "../utils/logger.js"
+import {logError, logWarning} from "../utils/logger.js"
 import {
     escapeMarkdownV2,
     deleteLoader,
@@ -17,6 +17,17 @@ import {
 
 
 
+
+// Javobning faqat SHAKLINI (kalit → tur) qaytaradi, qiymatlarini emas.
+// Javob ichida xodimning maoshi bo'lishi mumkin, log esa guruhga ketadi —
+// shuning uchun log'ga hech qachon qiymat tushmasligi kerak.
+const describeShape = (value) => {
+    if (value === null || typeof value !== "object") return `${value === null ? "null" : typeof value}`
+    if (Array.isArray(value)) return `array(${value.length})`
+    const keys = Object.entries(value).map(([k, v]) =>
+        `${k}: ${v === null ? "null" : Array.isArray(v) ? `array(${v.length})` : typeof v}`)
+    return keys.length ? `{ ${keys.join(", ")} }` : "{}"
+}
 
 const SERVICE_KEYS = {
     SALARY: '8514a7291109c3bbbdbafb909070e8b9',
@@ -117,7 +128,14 @@ export async function mainConversation(conversation, ctx){
 export async function myServiceConversation(conversation, ctx){
     const uuid = conversation.session.session_db.uuid
     const {message_id: loadingMsgId} = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
-    const [response,err] = await authService.servicesUser({uuid})
+    // conversation.external: HRM backend'ga so'rovlar grammY orqali o'tmaydi.
+    // Conversation esa har bir yangi update'da funksiyani BOSHIDAN qayta ijro
+    // etadi — natijada oldingi barcha so'rovlar takrorlanardi (yuklama, va
+    // muhimi: qayta ijroda backend boshqa javob qaytarsa kod boshqa shoxga
+    // ketib, holat nomuvofiq bo'lardi). external() natijani log'ga yozadi va
+    // qayta ijroda o'shani qaytaradi, ya'ni so'rov bir marta ketadi.
+    const [response,err] = await conversation.external(() =>
+        authService.servicesUser({uuid}))
     await deleteLoader(ctx, loadingMsgId)
 
     // Backend yiqilsa/timeout bo'lsa response null keladi — .data'ga tegmasdan chiqamiz.
@@ -182,7 +200,8 @@ export async function myServiceConversation(conversation, ctx){
     }
 
     const {message_id: loadingMsgId2} = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
-    const [response2,error] = await authService.getServices({params:{service:key}, uuid})
+    const [response2,error] = await conversation.external(() =>
+        authService.getServices({params:{service:key}, uuid}))
     await deleteLoader(ctx, loadingMsgId2)
 
     if(!Array.isArray(response2?.data)){
@@ -203,24 +222,76 @@ export async function myServiceConversation(conversation, ctx){
 
 export async function mySalaryConversation(conversation, ctx){
     const uuid = conversation.session.session_db.uuid
-    const serviceKey =conversation.session.session_db.selectedServiceKey
+
+    // Kalit sessiyadan emas, konstantadan olinadi. myServiceConversation bu
+    // yerga faqat key === SERVICE_KEYS.SALARY bo'lganda o'tadi, ya'ni menyu
+    // yo'lida sessiyadagi qiymat baribir aynan shu konstanta bo'ladi. Lekin
+    // clientComposer bu conversation'ga to'g'ridan-to'g'ri ham kiradi
+    // ("/salary" komandasi va "🔙 Yilga qaytish" tugmasi) — o'sha yo'llarda
+    // selectedServiceKey o'rnatilmagan (null) yoki boshqa xizmatdan qolib
+    // ketgan bo'ladi. Natijada so'rov `service` parametrisiz ketardi va
+    // backend 200 bilan { message, error: true, data: [] } qaytarardi:
+    // err null, months yo'q, user esa "Serverda xatolik" ko'rardi.
+    const serviceKey = SERVICE_KEYS.SALARY
     const {message_id} = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
-    const [response,err] = await authService.getServices({params:{service:serviceKey}, uuid})
+    const [response,err] = await conversation.external(() =>
+        authService.getServices({params:{service:serviceKey}, uuid}))
     await deleteLoader(ctx, message_id)
 
     if(!Array.isArray(response?.months)){
-        logError("oylik/months", err, { ctx })
+        // Bu shoxga ikki xil holat tushadi:
+        //   1) so'rov xato bergan — err to'la, log'da hammasi ko'rinadi;
+        //   2) backend 200 qaytargan, lekin javobda months massivi yo'q — bunda
+        //      err null bo'ladi va log faqat "xato obyekti yo'q" deb yozardi,
+        //      ya'ni sababni aniqlash imkonsiz edi.
+        // Ikkinchi holat uchun so'ralgan service va javobning shaklini qo'shamiz.
+        logError("oylik/months", err, {
+            ctx,
+            extra: err ? undefined : {
+                serviceKey,
+                javobShakli: describeShape(response),
+            },
+        })
         await ctx.reply(ctx.t('serviceUnavailable'),{parse_mode:"HTML"})
         await mainConversation(conversation, ctx)
         return
     }
 
-    if(response.months.length===0){
+    // Backend ba'zida `month` qiymati 1..12 oralig'idan tashqarida bo'lgan yozuv
+    // qaytaradi (kuzatilgani: month=0). Bunday yozuv uchun `month_0` tarjimasi
+    // yo'q — tugmada kalitning o'zi ko'rinib qolardi, ustiga bosilsa esa
+    // validateMonth uni tanimay "noto'g'ri" siklini boshlardi. Shu sababli
+    // bunday yozuvlarni menyudan chiqarib tashlaymiz.
+    const isValidMonth = (v) => {
+        const m = Number(v?.month)
+        return Number.isInteger(m) && m >= 1 && m <= 12
+    }
+
+    const months = response.months.filter(isValidMonth)
+    const invalidMonths = response.months.filter((v) => !isValidMonth(v))
+
+    // Ma'lumotning o'zi noto'g'ri — buni backend tuzatishi kerak. Bot uchun bu
+    // xato emas: yozuv menyudan olib tashlanadi va foydalanuvchi hech narsani
+    // sezmaydi. Shu sababli logError emas, logWarning — 🔴 XATO o'rniga 🟡
+    // ogohlantirish va uzun dedup oynasi bilan ketadi.
+    //
+    // Bu joy oylik menyusi har chizilganda ishlaydi (jumladan "Yilga qaytish"
+    // qaytib kirganda ham), backenddagi buzuq yozuv esa o'zgarmaydi — 5
+    // daqiqalik oddiy dedup oynasida bitta buzuq yozuv topic'ni soatlab
+    // to'ldirib turardi (kuzatilgani: 5 daqiqada 13 marta).
+    if(invalidMonths.length){
+        logWarning(
+            "oylik/noto'g'ri month qiymati",
+            new Error(`month 1..12 oraligida emas: ${JSON.stringify(invalidMonths)}`),
+            { ctx }
+        )
+    }
+
+    if(months.length===0){
         await ctx.reply(ctx.t('notFoundData'),{parse_mode:"HTML"})
         return
     }
 
-    const months = response.months
     const salaryKey = response.check_salary_key
 
     const yearList = [...new Set(months.map(v=>v.year))].sort((a,b)=>a-b)
@@ -273,7 +344,11 @@ export async function mySalaryConversation(conversation, ctx){
 
     while(true){
 
-        await ctx.reply(ctx.t('selectMonth', {n:selectedYear}),
+        // Yil String sifatida uzatiladi: Fluent son argumentini Intl.NumberFormat
+        // bilan formatlaydi va yilga mingliklar ajratgichini qo'shib qo'yadi
+        // ("2 024"). selectedYear'ning o'zi son bo'lib qoladi — u backend'ga
+        // year parametri sifatida ketadi.
+        await ctx.reply(ctx.t('selectMonth', {n:String(selectedYear)}),
             {
                 parse_mode:"HTML",
                 reply_markup:monthKeyboard
@@ -304,7 +379,8 @@ export async function mySalaryConversation(conversation, ctx){
         const selectedMonth = monthList.filter(v=>ctx.t(v.name) === ctx.message.text)[0].id
 
         const loadingMsg = await ctx.reply(ctx.t('loading'),{parse_mode:"HTML"})
-        const [salaryResponse,salaryErr] = await authService.getServices({params:{service:salaryKey,year:selectedYear,month:selectedMonth}, uuid})
+        const [salaryResponse,salaryErr] = await conversation.external(() =>
+            authService.getServices({params:{service:salaryKey,year:selectedYear,month:selectedMonth}, uuid}))
         await deleteLoader(ctx, loadingMsg.message_id)
 
         // Xato bo'lsa siklni uzmaymiz — user boshqa oyni tanlab ko'rishi mumkin.
@@ -390,7 +466,8 @@ const sendSalaryData =async (salaryData, ctx)=>{
 export async function turniketConversation(conversation, ctx){
     const uuid = conversation.session.session_db.uuid
     const {message_id: loadingMsgId} = await ctx.reply(ctx.t('loading'), {parse_mode:"HTML"})
-    const [response] = await authService.servicesUser({uuid})
+    const [response] = await conversation.external(() =>
+        authService.servicesUser({uuid}))
     await deleteLoader(ctx, loadingMsgId)
 
     const availableServiceIds = response?.data?.map(v => v.id) || []
@@ -487,7 +564,8 @@ export async function selectDateConversation(conversation, ctx){
     const service = conversation.session.session_db.selectedServiceKey || SERVICE_KEYS.TURNIKET
     const uuid = conversation.session.session_db.uuid
 
-    const [response,err] = await authService.getServices({uuid, params:{service, date}})
+    const [response,err] = await conversation.external(() =>
+        authService.getServices({uuid, params:{service, date}}))
 
     if(!Array.isArray(response?.data)){
         logError("turniket", err, { ctx })
@@ -515,7 +593,8 @@ async function getMedConversation(conversation, ctx){
     const service = conversation.session.session_db.selectedServiceKey || SERVICE_KEYS.MEDICAL
     const uuid = conversation.session.session_db.uuid
 
-    const [response,err] = await authService.getServices({uuid, params:{service}})
+    const [response,err] = await conversation.external(() =>
+        authService.getServices({uuid, params:{service}}))
 
     if(!Array.isArray(response?.data)){
         logError("tibbiy-ko'rik", err, { ctx })
@@ -541,7 +620,8 @@ async function getMedConversation(conversation, ctx){
 const getTodayEvents = async(ctx, conversation)=>{
     const serviceKey = SERVICE_KEYS.TURNIKET
     const uuid = conversation.session.session_db.uuid
-    const [response,err] = await authService.getServices({uuid, params:{service:serviceKey}})
+    const [response,err] = await conversation.external(() =>
+        authService.getServices({uuid, params:{service:serviceKey}}))
 
     // Bu "bonus" ko'rsatkich — xato bo'lsa jim o'tkazamiz, keyingi qadam (sana tanlash) davom etadi.
     if(!Array.isArray(response?.data)){
