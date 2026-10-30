@@ -12,6 +12,22 @@ const bot = new Composer().chatType('private')
 
 bot.command('start', async (ctx) => {
     const payload = ctx.match?.trim()
+
+    // Web profildagi «Botga ulash» havolasi: /start link-<token> — shu chat hisobga ulanadi.
+    const linkToken = /^link-([a-f0-9]{16,64})$/.exec(payload ?? "")?.[1]
+    if (linkToken) {
+        const [res, err] = await authService.linkUser({data:{token: linkToken, chat_id: ctx.from.id}})
+        if (err || !res?.data?.uuid) {
+            await ctx.reply(ctx.t('linkExpired'), {parse_mode:"HTML"})
+            return
+        }
+        ctx.session.session_db.uuid = res.data.uuid
+        ctx.session.session_db.isAuth = true
+        ctx.session.session_db.isLogOut = false
+        await ctx.reply(ctx.t('linkSuccess'), {parse_mode:"HTML"})
+        await ctx.conversation.enter("mainConversation")
+        return
+    }
     // Deep link: /start web-<token> yoki /start mobile-<token>. Backend `get-otp`
     // faqat chat_id qabul qiladi, shuning uchun platforma/token saqlanmaydi —
     // payload'dan bizga faqat "OTP so'ralyapti" degan signal kerak.

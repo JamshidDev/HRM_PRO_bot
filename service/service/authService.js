@@ -25,6 +25,15 @@ const registerUser =async (payload)=>{
         return [null, err.response?.data || err.message]
     }
 }
+// Profil havolasi (/start link-<token>) orqali chatni hisobga ulash.
+const linkUser =async (payload)=>{
+    try{
+        const {data} = await axios.post(`/v1/telegram/auth/link`, payload?.data)
+        return [data, null]
+    }catch (err){
+        return [null, err.response?.data || err.message]
+    }
+}
 const deleteUser =async (payload)=>{
     try{
         const {data} = await axios.delete(`/v1/telegram/auth/${payload.id}`)
@@ -93,6 +102,7 @@ export const authService = {
     checkUserInfo,
     checkRegisterUser,
     registerUser,
+    linkUser,
     deleteUser,
     servicesUser,
     getServices,

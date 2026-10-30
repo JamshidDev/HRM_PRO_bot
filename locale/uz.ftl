@@ -30,6 +30,8 @@ preview =⬅️  Oldingi
 next =Keyingi ➡️
 
 reLogin =🔒 Qayta tizimga kirish
+linkSuccess =✅ <b>Hisobingiz HRM botga ulandi.</b>
+linkExpired =⚠️ <i>Havola muddati tugagan yoki ishlatilgan.</i> HRM profilidan yangi havola oling.
 activeElsewhere =⚠️ <i>Bu hisob boshqa telegram akkauntda faol.</i> Shu qurilmaga o'tkazilsinmi? (avvalgi akkauntdan chiqariladi)
 noService = <i>Sizda hech qanday xizmat mavjud emas</i>
 
